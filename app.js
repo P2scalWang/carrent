@@ -1,6 +1,6 @@
 // Data Configuration - PLEASE UPDATE THESE
 const LIFF_ID = '2008863808-e2MCAccQ';
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwnbTKLusYVToAHRNZAxTEhC-crmAdttTeZdR3iYyeeCVNalfwj60YTC4oleFXv7K-0ZA/exec'; // Updated Link
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyH1oMpE1tEJaFZjf1QGAurl_EkF4Nf_MZwEcayxHpcVHKrqhe2Q6dqp7zHBMkS3YrpQg/exec'; // Updated Link
 
 const CARS_DATA = [
     { id: 1, plate: 'ญช 908 กท', model: 'Cap', color: 'White', type: 'Fuel' },
