@@ -85,8 +85,8 @@
                     </div>
                 </div>
 
-                <!-- Timeline View -->
-                <div class="timeline-container glass-panel">
+                <!-- Timeline View (Desktop/Tablet) -->
+                <div class="timeline-container glass-panel desktop-only">
                     <div class="timeline-header">
                         <h2>Availability Timeline</h2>
                         <div class="legend">
@@ -98,6 +98,14 @@
                         <div class="timeline-grid" id="timelineGrid">
                             <!-- JS will render this -->
                         </div>
+                    </div>
+                </div>
+
+                <!-- Mobile History View -->
+                <div class="mobile-only" style="margin-top: 2rem;">
+                    <h3 style="margin-bottom: 1rem; color: var(--text-muted);">รายการล่าสุด (Recent Bookings)</h3>
+                    <div id="mobileHistoryList">
+                        <!-- JS Populated -->
                     </div>
                 </div>
             </section>
