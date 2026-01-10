@@ -1,6 +1,6 @@
 // Data Configuration - PLEASE UPDATE THESE
 const LIFF_ID = '2008863808-e2MCAccQ';
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwxQSBUrSm8fnb2fRymfPQ8DvQL_ViAwUpw9PNZEn7ZlqtU-iV-lwFSvOzbf-7F_hBWHw/exec'; // e.g. https://script.google.com/macros/s/.../exec
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzDx9YMUDDr0BJ1DghS94zB8sK8EkOkfnGxylXJ3fkG3m4B1sQ2QAj1VWLxih2d-PSzCA/exec'; // e.g. https://script.google.com/macros/s/.../exec
 
 const CARS_DATA = [
     { id: 1, plate: 'ญช 908 กท', model: 'Cap', color: 'White', type: 'Fuel' },
@@ -365,11 +365,19 @@ async function submitBookingToSheet(bookingData) {
         } catch (e) { console.error(e); }
     }
 
+    // Lookup Car Details for Sheet
+    const car = CARS_DATA.find(c => c.id == bookingData.carId);
+    const carModelStr = car ? `${car.model} ${car.color}` : 'Unknown';
+    const carPlateStr = car ? car.plate : 'Unknown';
+
     // Enrich with LIFF data if available
     const payload = {
         ...bookingData,
-        userId: liffProfile ? liffProfile.userId : 'guest', // This should now be real ID
-        user: bookingData.user // Use form value (which might be auto-filled)
+        userId: liffProfile ? liffProfile.userId : 'guest',
+        user: bookingData.user,
+        // Add explicit columns for Sheet
+        carModel: carModelStr,
+        carPlate: carPlateStr
     };
 
     // 1. Save locally for immediate UI update (Optimistic UI)
