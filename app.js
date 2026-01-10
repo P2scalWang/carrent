@@ -640,13 +640,30 @@ window.updateStatus = async function (id, status) {
     document.getElementById('loadingOverlay').style.display = 'none';
 }
 
-// Date Navigation
-document.getElementById('prevMonth').addEventListener('click', () => {
-    currentDate.setMonth(currentDate.getMonth() - 1);
-    renderDashboard();
-});
+// Date Navigation with Null Checks
+const prevBtn = document.getElementById('prevMonth');
+const nextBtn = document.getElementById('nextMonth');
 
-document.getElementById('nextMonth').addEventListener('click', () => {
-    currentDate.setMonth(currentDate.getMonth() + 1);
-    renderDashboard();
-});
+if (prevBtn) {
+    prevBtn.addEventListener('click', () => {
+        currentDate.setMonth(currentDate.getMonth() - 1);
+        renderDashboard();
+    });
+}
+
+if (nextBtn) {
+    nextBtn.addEventListener('click', () => {
+        currentDate.setMonth(currentDate.getMonth() + 1);
+        renderDashboard();
+    });
+}
+
+// Global Error Handler for Mobile Debugging
+window.onerror = function (msg, url, line) {
+    // alert("Error: " + msg + "\nLine: " + line); // Uncomment for extreme debugging
+    console.error("Global Error:", msg, line);
+    document.getElementById('loadingOverlay').style.display = 'none'; // Emergency unlock
+};
+
+// Force hide overlay on load
+document.getElementById('loadingOverlay').style.display = 'none';
