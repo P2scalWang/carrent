@@ -1,6 +1,6 @@
 // Data Configuration - PLEASE UPDATE THESE
 const LIFF_ID = '2008863808-e2MCAccQ';
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzDx9YMUDDr0BJ1DghS94zB8sK8EkOkfnGxylXJ3fkG3m4B1sQ2QAj1VWLxih2d-PSzCA/exec'; // e.g. https://script.google.com/macros/s/.../exec
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby2Am0fCPB114NhsGQ0jdQvnflZRIw1rFiQh2s3rz-YYv9mNqgE1Gd674nEiOHC2sgt7Q/exec'; // e.g. https://script.google.com/macros/s/.../exec
 
 const CARS_DATA = [
     { id: 1, plate: 'ญช 908 กท', model: 'Cap', color: 'White', type: 'Fuel' },
@@ -14,7 +14,7 @@ const CARS_DATA = [
 ];
 
 // State
-let bookings = JSON.parse(localStorage.getItem('carBookings')) || [];
+let bookings = []; // Now fetching from server
 let currentDate = new Date();
 let liffProfile = null; // Store user profile
 
@@ -30,14 +30,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 1. Initialize LIFF
     await initLiff();
 
-    // Generate Dummy Data if empty
-    if (bookings.length === 0) {
-        generateDummyData();
-    }
+    // 2. Fetch Data from Sheet (No more localStorage)
+    await fetchBookings();
 
-    // ... Rest of init
-
-
+    // 3. UI Init
     initSelectOptions();
     renderDashboard();
     updateStats();
@@ -376,13 +372,15 @@ async function submitBookingToSheet(bookingData) {
         userId: liffProfile ? liffProfile.userId : 'guest',
         user: bookingData.user,
         // Add explicit columns for Sheet
+        carId: bookingData.carId, // Add ID back
         carModel: carModelStr,
-        carPlate: carPlateStr
+        carPlate: carPlateStr,
+        // No action needed for create (default)
     };
 
     // 1. Save locally for immediate UI update (Optimistic UI)
     bookings.push(payload);
-    saveBookings();
+    // saveBookings(); // logic removed
 
     // Refresh UI immediately
     closeBookingModal();
@@ -392,7 +390,7 @@ async function submitBookingToSheet(bookingData) {
     showSection('bookings');
 
     // 2. Send to Google Sheets
-    if (GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL !== 'YOUR_GOOGLE_SCRIPT_URL_HERE') {
+    if (GOOGLE_SCRIPT_URL) {
         try {
             // Use 'no-cors' mode for GScript simple triggers, OR handle CORS properly in script (hard).
             // Usually fetch to macro returning JSON requires specific CORS headers or use text/plain.
@@ -406,11 +404,12 @@ async function submitBookingToSheet(bookingData) {
                 },
                 body: JSON.stringify(payload)
             });
-
+            // Fetch latest to get real timestamp/ID if needed, but optimistic is fine
+            // await fetchBookings(); 
             alert(`จองสำเร็จ! (Saved to Sheet)`);
         } catch (error) {
             console.error('Sheet Error:', error);
-            alert('บันทึกในเครื่องสำเร็จ แต่ส่งขึ้น Sheet ไม่ผ่าน (Network Error)');
+            alert('ส่งข้อมูลไม่สำเร็จ (Network Error)');
         }
     } else {
         alert('จองสำเร็จ! (Local Only - Please config API URL)');
@@ -579,21 +578,90 @@ window.updateStatus = function (id, status) {
     if (idx !== -1) {
         bookings[idx].status = status;
         saveBookings();
-        renderBookingsTable();
-        // If approved, it might affect timeline, but we are in bookings view.
+        // --- API & DATA SYNC ---
+
+        async function fetchBookings() {
+            if (!GOOGLE_SCRIPT_URL) return;
+
+            // Show partial loading indicator if needed
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            // loadingOverlay.style.display = 'flex'; // Optional: might be too intrusive on every load
+
+            try {
+                const response = await fetch(GOOGLE_SCRIPT_URL);
+                const data = await response.json();
+
+                if (Array.isArray(data)) {
+                    bookings = data;
+                    console.log("Bookings loaded:", bookings.length);
+
+                    // Re-render everything
+                    renderDashboard();
+                    renderBookingsTable(); // This also updates mobile history
+                    updateStats();
+                }
+            } catch (error) {
+                console.error("Failed to fetch bookings:", error);
+                // alert("โหลดข้อมูลไม่สำเร็จ (Load Failed)");
+            } finally {
+                // loadingOverlay.style.display = 'none';
+            }
+        }
+
+        // Overwrite saveBookings to do nothing (since we rely on Cloud)
+        function saveBookings() {
+            // localStorage.setItem('carBookings', JSON.stringify(bookings));
+            // No-op: Data is now in Cloud
+        }
+
+        // Generate Dummy Data DEPRECATED
+        function generateDummyData() {
+            // No-op
+        }
+
+        // Updated Status Function -> Call API
+        window.updateStatus = async function (id, status) {
+            if (!confirm(`ต้องการเปลี่ยนสถานะเป็น ${status}?`)) return;
+
+            // Optimistic UI Update
+            const bk = bookings.find(b => b.id == id);
+            if (bk) {
+                bk.status = status;
+                renderBookingsTable();
+                renderDashboard();
+                updateStats();
+            }
+
+            // Call API
+            document.getElementById('loadingOverlay').style.display = 'flex';
+            try {
+                await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify({
+                        action: 'updateStatus',
+                        id: id,
+                        status: status
+                    })
+                });
+                // alert("อัปเดตสถานะสำเร็จ");
+            } catch (error) {
+                console.error("Update status failed:", error);
+                alert("อัปเดตบน Server ไม่สำเร็จ (Check Connection)");
+                // Revert?
+            }
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+
+        // Date Navigation
+        document.getElementById('prevMonth').addEventListener('click', () => {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderDashboard();
+        });
+        document.getElementById('nextMonth').addEventListener('click', () => {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderDashboard();
+        });
     }
-}
-
-function saveBookings() {
-    localStorage.setItem('carBookings', JSON.stringify(bookings));
-}
-
-// Date Navigation
-document.getElementById('prevMonth').addEventListener('click', () => {
-    currentDate.setMonth(currentDate.getMonth() - 1);
-    renderDashboard();
-});
-document.getElementById('nextMonth').addEventListener('click', () => {
-    currentDate.setMonth(currentDate.getMonth() + 1);
-    renderDashboard();
 });
