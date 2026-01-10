@@ -1,6 +1,6 @@
 // Data Configuration - PLEASE UPDATE THESE
 const LIFF_ID = '2008863808-e2MCAccQ';
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyhu3wTU3MSOK4NTHaZ4P5j65Iz6zlJ7aJpn1W73A-41w7Bcmj5LkWbRRGuLLTM8hzdCQ/exec'; // Updated Link
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbziQKheDH2oT9Qqm90L-a4I2qYips-SHhTDgrDHGLkFlBR7OGGOWB7stue8U4VHF3LXHw/exec'; // Updated Link
 
 const CARS_DATA = [
     { id: 1, plate: 'ญช 908 กท', model: 'Cap', color: 'White', type: 'Fuel' },
@@ -493,7 +493,11 @@ function renderBookingsTable() {
     const sorted = [...bookings].sort((a, b) => new Date(b.start) - new Date(a.start));
 
     tbody.innerHTML = sorted.map(b => {
-        const car = CARS_DATA.find(c => c.id == b.carId) || { plate: 'Unknown', model: 'Unknown' };
+        // Use lookup car if found, OR fall back to the data from Sheet directly
+        const car = CARS_DATA.find(c => c.id == b.carId);
+
+        const displayPlate = car ? car.plate : (b.carPlate || 'Unknown');
+        const displayModel = car ? car.model : (b.carModel || 'Unknown');
 
         // Use Strict Format
         const start = getFormattedDate(b.start);
@@ -523,8 +527,8 @@ function renderBookingsTable() {
                     </div>
                 </td>
                 <td>${b.purpose}</td>
-                <td><span style="font-family: monospace; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">${car.plate}</span></td>
-                <td>${car.model}</td>
+                <td><span style="font-family: monospace; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">${displayPlate}</span></td>
+                <td>${displayModel}</td>
                 <td>${statusBadge}</td>
                 <td>${actions}</td>
             </tr>
@@ -548,7 +552,10 @@ function renderMobileHistory(bookingsData) {
     const recent = bookingsData.slice(0, 5);
 
     container.innerHTML = recent.map(b => {
-        const car = CARS_DATA.find(c => c.id == b.carId) || { plate: 'Unknown', model: 'Unknown' };
+        const car = CARS_DATA.find(c => c.id == b.carId);
+        const displayPlate = car ? car.plate : (b.carPlate || 'Unknown');
+        const displayModel = car ? car.model : (b.carModel || 'Unknown');
+
         const start = getFormattedDate(b.start);
 
         let statusColor = '#f59e0b'; // Pending
@@ -559,8 +566,8 @@ function renderMobileHistory(bookingsData) {
             <div class="history-item">
                 <div>
                     <div class="h-date"><i class="fa-solid fa-calendar"></i> ${start}</div>
-                    <div class="h-car" style="color:white; font-weight:500;">${car.model}</div>
-                    <div style="font-size:0.8rem; color:var(--text-muted); margin-top:2px;">${car.plate}</div>
+                    <div class="h-car" style="color:white; font-weight:500;">${displayModel}</div>
+                    <div style="font-size:0.8rem; color:var(--text-muted); margin-top:2px;">${displayPlate}</div>
                     <div style="font-size:0.8rem; color:var(--text-muted);">${b.purpose}</div>
                 </div>
                 <div class="h-status" style="color: ${statusColor}; background: ${statusColor}20; border: 1px solid ${statusColor}40;">
@@ -586,21 +593,26 @@ async function fetchBookings() {
         if (Array.isArray(data)) {
             // Map Data to System Format
             bookings = data.map(b => {
-                // 1. Recover Car ID from Plate
+                // 1. Recover Car ID from Plate (Try to match)
                 const car = CARS_DATA.find(c => (b.carPlate || '').trim() === c.plate.trim());
 
-                // 2. Robust Date Fixer
+                // 2. Robust Date Fixer (Handles '2026-01-11 9.00.00' from Sheet)
                 const fixDate = (str) => {
-                    if (!str) return null;
-                    // Replace dots with colons (9.00 -> 9:00)
-                    let s = str.replace(/\./g, ':');
-                    // If simple time range or bad format, try to keep valid part
+                    if (!str || str === 'NaN') return null;
+                    if (str instanceof Date) return str.toISOString();
+
+                    // Replace dots in time with colons: "9.00.00" -> "9:00:00"
+                    // But keep date separators if they are dots? Usually ISO uses hyphens.
+                    // Let's replace ONLY dots that look like time separators (followed by digits)
+                    let s = str.toString().replace(/(\d{1,2})\.(\d{2})\.(\d{2})/, '$1:$2:$3');
                     return s;
                 };
 
                 return {
                     ...b,
-                    carId: car ? car.id : 0,
+                    carId: car ? car.id : 0, // Fallback ID
+                    carModel: b.carModel, // Trust Sheet data first
+                    carPlate: b.carPlate, // Trust Sheet data first
                     start: fixDate(b.start),
                     end: fixDate(b.end)
                 };
