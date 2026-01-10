@@ -1,6 +1,6 @@
 // Data Configuration - PLEASE UPDATE THESE
 const LIFF_ID = '2008863808-e2MCAccQ';
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzpfu8cf9gWDMJB7iqy-40DNWaL_Q3r5EbKn9M3YW0IfuUtC7eEUL0Ajtlq-ABPGr2zVw/exec'; // Updated Link
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyhu3wTU3MSOK4NTHaZ4P5j65Iz6zlJ7aJpn1W73A-41w7Bcmj5LkWbRRGuLLTM8hzdCQ/exec'; // Updated Link
 
 const CARS_DATA = [
     { id: 1, plate: 'ญช 908 กท', model: 'Cap', color: 'White', type: 'Fuel' },
@@ -586,20 +586,23 @@ async function fetchBookings() {
         if (Array.isArray(data)) {
             // Map Data to System Format
             bookings = data.map(b => {
-                // 1. Recover Car ID from Plate (for timeline logic)
+                // 1. Recover Car ID from Plate
                 const car = CARS_DATA.find(c => (b.carPlate || '').trim() === c.plate.trim());
 
-                // 2. Fix Date Format (Convert '9.00.00' to '09:00:00' if needed)
-                let startStr = b.start;
-                let endStr = b.end;
-                if (startStr && startStr.includes('.')) startStr = startStr.replace(/\./g, ':');
-                if (endStr && endStr.includes('.')) endStr = endStr.replace(/\./g, ':');
+                // 2. Robust Date Fixer
+                const fixDate = (str) => {
+                    if (!str) return null;
+                    // Replace dots with colons (9.00 -> 9:00)
+                    let s = str.replace(/\./g, ':');
+                    // If simple time range or bad format, try to keep valid part
+                    return s;
+                };
 
                 return {
                     ...b,
-                    carId: car ? car.id : 0, // Fallback ID
-                    start: startStr,
-                    end: endStr
+                    carId: car ? car.id : 0,
+                    start: fixDate(b.start),
+                    end: fixDate(b.end)
                 };
             });
             console.log("Bookings loaded:", bookings.length);
