@@ -551,6 +551,45 @@ function renderBookingsTable() {
             </tr>
         `;
     }).join('');
+
+    // ALSO RENDER MOBILE LIST (Responsive)
+    renderMobileHistory(sorted);
+}
+
+function renderMobileHistory(bookingsData) {
+    const container = document.getElementById('mobileHistoryList');
+    if (!container) return;
+
+    if (bookingsData.length === 0) {
+        container.innerHTML = '<div style="text-align:center; color: var(--text-muted); padding: 1rem;">ไม่มีประวัติการจอง</div>';
+        return;
+    }
+
+    // Limit to 5 recent items for mobile dashboard
+    const recent = bookingsData.slice(0, 5);
+
+    container.innerHTML = recent.map(b => {
+        const car = CARS_DATA.find(c => c.id == b.carId) || { plate: 'Unknown', model: 'Unknown' };
+        const start = getFormattedDate(b.start);
+
+        let statusColor = '#f59e0b'; // Pending
+        if (b.status === 'Approved') statusColor = '#10b981';
+        if (b.status === 'Rejected') statusColor = '#ef4444';
+
+        return `
+            <div class="history-item">
+                <div>
+                    <div class="h-date"><i class="fa-solid fa-calendar"></i> ${start}</div>
+                    <div class="h-car" style="color:white; font-weight:500;">${car.model}</div>
+                    <div style="font-size:0.8rem; color:var(--text-muted); margin-top:2px;">${car.plate}</div>
+                    <div style="font-size:0.8rem; color:var(--text-muted);">${b.purpose}</div>
+                </div>
+                <div class="h-status" style="color: ${statusColor}; background: ${statusColor}20; border: 1px solid ${statusColor}40;">
+                    ${b.status}
+                </div>
+            </div>
+        `;
+    }).join('');
 }
 
 window.updateStatus = function (id, status) {
