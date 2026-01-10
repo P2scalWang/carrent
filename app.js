@@ -90,59 +90,22 @@ document.addEventListener('DOMContentLoaded', () => {
     startInput.min = dateStr;
     endInput.min = dateStr;
 
-    // Setup Custom Date Display & Constraints
-    setupDateInputs();
+    // Constraint Logic: Ensure End Date >= Start Date
+    startInput.addEventListener('change', (e) => {
+        endInput.min = e.target.value;
+        if (endInput.value < e.target.value) {
+            endInput.value = e.target.value;
+        }
+    });
 
     // Initial filter with default date
     filterAvailableCars();
 });
 
-// Logic: Setup Custom Date Inputs (dd/mm/yyyy) & Constraints
-function setupDateInputs() {
-    const inputs = document.querySelectorAll('input[type="date"]');
-    const startInput = document.getElementById('startDate');
-    const endInput = document.getElementById('endDate');
-
-    // Initial display update
-    inputs.forEach(input => updateDateAttribute(input));
-
-    // Add logic to block backward time
-    startInput.addEventListener('change', (e) => {
-        // When start changes, update end min
-        endInput.min = e.target.value;
-
-        // If End is now less than Start, push it forward
-        if (endInput.value < e.target.value) {
-            endInput.value = e.target.value;
-            updateDateAttribute(endInput);
-        }
-    });
-
-    inputs.forEach(input => {
-        input.addEventListener('change', (e) => {
-            updateDateAttribute(e.target);
-        });
-    });
-}
-
-function updateDateAttribute(input) {
-    const val = input.value;
-    if (val) {
-        const [y, m, d] = val.split('-');
-        input.setAttribute('data-date', `${d}/${m}/${y}`);
-    } else {
-        input.setAttribute('data-date', 'dd/mm/yyyy');
-    }
-}
-
 // Logic: Filter Cars based on Date Range
 window.filterAvailableCars = function () {
     const startInput = document.getElementById('startDate');
     const endInput = document.getElementById('endDate');
-
-    // Ensure visuals are updated (in case triggered by inline onchange)
-    updateDateAttribute(startInput);
-    updateDateAttribute(endInput);
 
     const startVal = startInput.value;
     const endVal = endInput.value;
@@ -371,18 +334,20 @@ async function initLiff() {
             const nameInput = document.getElementById('userName');
             if (nameInput) {
                 nameInput.value = profile.displayName;
-                nameInput.readOnly = true; // Lock name field
+                // nameInput.readOnly = true; // Optional: Let them edit display name if they want
             }
 
             // Update Sidebar Profile
-            document.querySelector('.user-profile .name').textContent = profile.displayName;
-            document.querySelector('.user-profile .avatar').textContent = profile.displayName.charAt(0);
+            const sidebarName = document.querySelector('.user-profile .name');
+            if (sidebarName) sidebarName.textContent = profile.displayName;
+            const sidebarAvatar = document.querySelector('.user-profile .avatar');
+            if (sidebarAvatar) sidebarAvatar.textContent = profile.displayName.charAt(0);
 
             // Show Mobile View optimized?
             // For now, standard view is decent.
         } else {
-            // Force login or allow guest?
-            // liff.login();
+            // Force login to get User ID for Message API
+            liff.login();
         }
     } catch (err) {
         console.error('LIFF Init Error:', err);
@@ -393,10 +358,17 @@ async function submitBookingToSheet(bookingData) {
     // Show Loading
     document.getElementById('loadingOverlay').style.display = 'flex';
 
+    // Ensure we have a profile if possible
+    if (!liffProfile && liff.isLoggedIn()) {
+        try {
+            liffProfile = await liff.getProfile();
+        } catch (e) { console.error(e); }
+    }
+
     // Enrich with LIFF data if available
     const payload = {
         ...bookingData,
-        userId: liffProfile ? liffProfile.userId : 'guest',
+        userId: liffProfile ? liffProfile.userId : 'guest', // This should now be real ID
         user: bookingData.user // Use form value (which might be auto-filled)
     };
 
