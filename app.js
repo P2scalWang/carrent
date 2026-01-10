@@ -571,97 +571,82 @@ function renderMobileHistory(bookingsData) {
     }).join('');
 }
 
-window.updateStatus = function (id, status) {
-    if (!confirm(`Are you sure you want to ${status} this booking?`)) return;
+// --- API & DATA SYNC ---
 
-    const idx = bookings.findIndex(b => b.id === id);
-    if (idx !== -1) {
-        bookings[idx].status = status;
-        saveBookings();
-        // --- API & DATA SYNC ---
+async function fetchBookings() {
+    if (!GOOGLE_SCRIPT_URL) return;
 
-        async function fetchBookings() {
-            if (!GOOGLE_SCRIPT_URL) return;
+    // Show partial loading indicator if needed
+    // const loadingOverlay = document.getElementById('loadingOverlay');
 
-            // Show partial loading indicator if needed
-            const loadingOverlay = document.getElementById('loadingOverlay');
-            // loadingOverlay.style.display = 'flex'; // Optional: might be too intrusive on every load
+    try {
+        const response = await fetch(GOOGLE_SCRIPT_URL);
+        const data = await response.json();
 
-            try {
-                const response = await fetch(GOOGLE_SCRIPT_URL);
-                const data = await response.json();
+        if (Array.isArray(data)) {
+            bookings = data;
+            console.log("Bookings loaded:", bookings.length);
 
-                if (Array.isArray(data)) {
-                    bookings = data;
-                    console.log("Bookings loaded:", bookings.length);
-
-                    // Re-render everything
-                    renderDashboard();
-                    renderBookingsTable(); // This also updates mobile history
-                    updateStats();
-                }
-            } catch (error) {
-                console.error("Failed to fetch bookings:", error);
-                // alert("โหลดข้อมูลไม่สำเร็จ (Load Failed)");
-            } finally {
-                // loadingOverlay.style.display = 'none';
-            }
-        }
-
-        // Overwrite saveBookings to do nothing (since we rely on Cloud)
-        function saveBookings() {
-            // localStorage.setItem('carBookings', JSON.stringify(bookings));
-            // No-op: Data is now in Cloud
-        }
-
-        // Generate Dummy Data DEPRECATED
-        function generateDummyData() {
-            // No-op
-        }
-
-        // Updated Status Function -> Call API
-        window.updateStatus = async function (id, status) {
-            if (!confirm(`ต้องการเปลี่ยนสถานะเป็น ${status}?`)) return;
-
-            // Optimistic UI Update
-            const bk = bookings.find(b => b.id == id);
-            if (bk) {
-                bk.status = status;
-                renderBookingsTable();
-                renderDashboard();
-                updateStats();
-            }
-
-            // Call API
-            document.getElementById('loadingOverlay').style.display = 'flex';
-            try {
-                await fetch(GOOGLE_SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'text/plain' },
-                    body: JSON.stringify({
-                        action: 'updateStatus',
-                        id: id,
-                        status: status
-                    })
-                });
-                // alert("อัปเดตสถานะสำเร็จ");
-            } catch (error) {
-                console.error("Update status failed:", error);
-                alert("อัปเดตบน Server ไม่สำเร็จ (Check Connection)");
-                // Revert?
-            }
-            document.getElementById('loadingOverlay').style.display = 'none';
-        }
-
-        // Date Navigation
-        document.getElementById('prevMonth').addEventListener('click', () => {
-            currentDate.setMonth(currentDate.getMonth() - 1);
+            // Re-render everything
             renderDashboard();
-        });
-        document.getElementById('nextMonth').addEventListener('click', () => {
-            currentDate.setMonth(currentDate.getMonth() + 1);
-            renderDashboard();
-        });
+            renderBookingsTable();
+            updateStats();
+        }
+    } catch (error) {
+        console.error("Failed to fetch bookings:", error);
     }
+}
+
+// Overwrite saveBookings to do nothing (since we rely on Cloud)
+function saveBookings() {
+    // No-op: Data is now in Cloud
+}
+
+// Generate Dummy Data DEPRECATED
+function generateDummyData() {
+    // No-op
+}
+
+// Updated Status Function -> Call API
+window.updateStatus = async function (id, status) {
+    if (!confirm(`ต้องการเปลี่ยนสถานะเป็น ${status}?`)) return;
+
+    // Optimistic UI Update
+    const bk = bookings.find(b => b.id == id);
+    if (bk) {
+        bk.status = status;
+        renderBookingsTable();
+        renderDashboard();
+        updateStats();
+    }
+
+    // Call API
+    document.getElementById('loadingOverlay').style.display = 'flex';
+    try {
+        await fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify({
+                action: 'updateStatus',
+                id: id,
+                status: status
+            })
+        });
+    } catch (error) {
+        console.error("Update status failed:", error);
+        alert("อัปเดตบน Server ไม่สำเร็จ (Check Connection)");
+    }
+    document.getElementById('loadingOverlay').style.display = 'none';
+}
+
+// Date Navigation
+document.getElementById('prevMonth').addEventListener('click', () => {
+    currentDate.setMonth(currentDate.getMonth() - 1);
+    renderDashboard();
+});
+
+document.getElementById('nextMonth').addEventListener('click', () => {
+    currentDate.setMonth(currentDate.getMonth() + 1);
+    renderDashboard();
 });
