@@ -1,6 +1,6 @@
 // Data Configuration - PLEASE UPDATE THESE
 const LIFF_ID = '2008863808-e2MCAccQ';
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby2Am0fCPB114NhsGQ0jdQvnflZRIw1rFiQh2s3rz-YYv9mNqgE1Gd674nEiOHC2sgt7Q/exec'; // e.g. https://script.google.com/macros/s/.../exec
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzpfu8cf9gWDMJB7iqy-40DNWaL_Q3r5EbKn9M3YW0IfuUtC7eEUL0Ajtlq-ABPGr2zVw/exec'; // Updated Link
 
 const CARS_DATA = [
     { id: 1, plate: 'ญช 908 กท', model: 'Cap', color: 'White', type: 'Fuel' },
@@ -584,7 +584,24 @@ async function fetchBookings() {
         const data = await response.json();
 
         if (Array.isArray(data)) {
-            bookings = data;
+            // Map Data to System Format
+            bookings = data.map(b => {
+                // 1. Recover Car ID from Plate (for timeline logic)
+                const car = CARS_DATA.find(c => (b.carPlate || '').trim() === c.plate.trim());
+
+                // 2. Fix Date Format (Convert '9.00.00' to '09:00:00' if needed)
+                let startStr = b.start;
+                let endStr = b.end;
+                if (startStr && startStr.includes('.')) startStr = startStr.replace(/\./g, ':');
+                if (endStr && endStr.includes('.')) endStr = endStr.replace(/\./g, ':');
+
+                return {
+                    ...b,
+                    carId: car ? car.id : 0, // Fallback ID
+                    start: startStr,
+                    end: endStr
+                };
+            });
             console.log("Bookings loaded:", bookings.length);
 
             // Re-render everything
