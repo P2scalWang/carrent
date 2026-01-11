@@ -228,9 +228,12 @@ function renderDashboard() {
                     barDiv.className = 'booking-bar';
                     barDiv.style.left = `${leftPos}px`;
                     barDiv.style.width = `${barWidth}px`;
-                    // Stacking: top 50% + dynamic offset
-                    barDiv.style.top = `calc(50% + ${(index * 10)}px)`;
-                    if (index > 0) barDiv.style.opacity = "0.9";
+
+                    // Fixed centering (No cascading)
+                    barDiv.style.top = `50%`;
+                    barDiv.style.transform = `translateY(-50%)`;
+
+                    if (index > 0) barDiv.style.zIndex = index + 10;
 
                     barDiv.title = tooltip;
 
