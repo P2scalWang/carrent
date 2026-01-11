@@ -432,4 +432,73 @@ window.showSection = (id) => {
     if (id === 'bookings') renderBookingsTable();
 };
 
+// ------------------------------------------
+// BOOKING SUBMISSION LOGIC
+// ------------------------------------------
+if (bookingForm) {
+    bookingForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        // 1. Collect Data
+        const userName = document.getElementById('userName').value;
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        const carId = document.getElementById('carPlate').value; // Value is ID here
+        const jobPurpose = document.getElementById('jobPurpose').value;
+
+        // 2. Validation
+        if (!userName || !startDate || !endDate || !carId || !jobPurpose) {
+            alert('กรุณากรอกข้อมูลให้ครบถ้วน');
+            return;
+        }
+
+        // 3. Find Car Details
+        const car = CARS_DATA.find(c => c.id == carId);
+
+        // 4. Create Payload
+        const newBooking = {
+            id: Date.now(), // Mock ID
+            user: userName,
+            start: new Date(startDate).toISOString(),
+            end: new Date(endDate).toISOString(),
+            carId: parseInt(carId),
+            carPlate: car.plate,
+            carModel: car.model,
+            purpose: jobPurpose,
+            status: 'Pending' // Default status
+        };
+
+        // 5. Update Local State (Optimistic)
+        bookings.push(newBooking);
+
+        // 6. Close Modal & Reset
+        closeBookingModal();
+        bookingForm.reset();
+
+        // 7. Refresh UI
+        renderDashboard();
+        renderBookingsTable();
+        updateStats();
+
+        // 8. (Optional) Send to API
+        /*
+        try {
+            document.getElementById('loadingOverlay').style.display = 'flex';
+            await fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'createBooking', ...newBooking })
+            });
+        } catch (err) {
+            console.error(err);
+        } finally {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+        */
+
+        alert('จองรถเรียบร้อยแล้ว (Booking Created)');
+    });
+}
+
 async function initLiff() { /* liff init code */ }
