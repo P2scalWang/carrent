@@ -1,13 +1,22 @@
 :root {
     --primary: #3b82f6;
+    /* Blue-500 */
     --primary-hover: #2563eb;
+    /* Blue-600 */
     --bg-dark: #0f172a;
+    /* Slate-900 */
     --bg-card: #1e293b;
+    /* Slate-800 */
     --text-main: #f8fafc;
+    /* Slate-50 */
     --text-muted: #94a3b8;
+    /* Slate-400 */
     --border: #334155;
+    /* Slate-700 */
     --accent-fuel: #f59e0b;
+    /* Amber-500 */
     --accent-ev: #10b981;
+    /* Emerald-500 */
 }
 
 * {
@@ -21,7 +30,6 @@ body {
     background-color: var(--bg-dark);
     color: var(--text-main);
     overflow: hidden;
-    /* App-like feel */
 }
 
 /* Layout */
@@ -49,15 +57,27 @@ body {
 /* Sidebar Elements */
 .logo {
     font-size: 1.5rem;
-    font-weight: 700;
+    font-weight: 800;
     margin-bottom: 3rem;
     display: flex;
     align-items: center;
     gap: 0.75rem;
     color: var(--primary);
+    letter-spacing: -0.5px;
 }
 
-/* Sidebar nav optimization moved to bottom */
+.sidebar nav a {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    padding: 1rem;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
 
 .sidebar nav a:hover,
 .sidebar nav a.active {
@@ -110,7 +130,7 @@ header {
 
 .actions {
     display: flex;
-    gap: 1.5rem;
+    gap: 1rem;
     align-items: center;
 }
 
@@ -144,7 +164,17 @@ header {
     margin-bottom: 2rem;
 }
 
-/* Stat card optimization moved to bottom */
+.stat-card {
+    background: rgba(30, 41, 59, 0.6);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    padding: 1.5rem;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.2);
+}
 
 .stat-card .icon {
     width: 50px;
@@ -182,8 +212,9 @@ header {
     font-weight: 700;
 }
 
-/* Timeline */
-/* Glass panel optimization moved to bottom */
+/* -------------------------------------------------------------------------- */
+/* NEW TIMELINE DESIGN */
+/* -------------------------------------------------------------------------- */
 
 .timeline-header {
     display: flex;
@@ -202,8 +233,8 @@ header {
 }
 
 .dot {
-    width: 10px;
-    height: 10px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
     display: block;
 }
@@ -221,6 +252,10 @@ header {
 .timeline-scroll-wrapper {
     overflow-x: auto;
     padding-bottom: 1rem;
+    background: #0f172a;
+    /* Match body bg to hide scroll overdraw */
+    border-radius: 12px;
+    border: 1px solid var(--border);
 }
 
 .calendar-table {
@@ -229,110 +264,121 @@ header {
     min-width: 800px;
 }
 
-.calendar-table th,
-.calendar-table td {
-    padding: 1rem;
-    border: 1px solid var(--border);
-    text-align: center;
-    position: relative;
-}
-
 .calendar-table th {
-    background: rgba(15, 23, 42, 0.8);
+    background: #1e293b;
+    /* Solid dark header */
+    color: #94a3b8;
+    font-weight: 600;
+    font-size: 0.85rem;
+    padding: 1rem 0.25rem;
     position: sticky;
     top: 0;
-    z-index: 10;
+    z-index: 20;
+    border-bottom: 2px solid #334155;
+    text-align: center;
 }
 
+/* Zebra Striping for better row visibility */
+.car-row:nth-child(even) .day-cell,
+.car-row:nth-child(even) .car-cell {
+    background: rgba(30, 41, 59, 0.4);
+}
+
+.calendar-table td {
+    padding: 0;
+    height: 60px;
+    /* Consistent height */
+    box-sizing: border-box;
+    border-right: 1px solid rgba(51, 65, 85, 0.3);
+    /* very subtle vertical lines */
+}
+
+/* Car Info Column */
 .car-cell {
-    text-align: left;
-    display: flex;
-    flex-direction: column;
-    min-width: 180px;
+    position: sticky;
+    left: 0;
+    background: #0f172a;
+    /* Match body */
+    z-index: 15;
+    border-right: 2px solid #334155 !important;
+    padding: 0 1.5rem !important;
+    min-width: 200px;
+    vertical-align: middle;
 }
 
 .car-model {
-    font-weight: 600;
+    font-weight: 700;
     color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .car-plate {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     color: var(--text-muted);
+    font-family: monospace;
+    margin-top: 4px;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 2px 6px;
+    border-radius: 4px;
+    display: inline-block;
 }
 
-/* Booking Bars - Professional Gantt Chart Style */
-.booking-bar {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    height: 36px;
-    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
-    border: 1px solid rgba(217, 119, 6, 0.4);
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    padding: 0 14px;
-    font-size: 0.875rem;
-    font-weight: 700;
-    color: #0f172a;
-    box-shadow:
-        0 2px 4px rgba(0, 0, 0, 0.2),
-        0 4px 12px rgba(251, 191, 36, 0.25),
-        inset 0 1px 0 rgba(255, 255, 255, 0.3);
-    cursor: pointer;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 5;
-    overflow: hidden;
-    white-space: nowrap;
-    backdrop-filter: blur(4px);
-}
-
-.booking-bar::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 50%;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0%, transparent 100%);
-    border-radius: 6px 6px 0 0;
-    pointer-events: none;
-}
-
-.booking-bar:hover {
-    transform: translateY(-50%) scale(1.03);
-    box-shadow:
-        0 4px 8px rgba(0, 0, 0, 0.3),
-        0 8px 24px rgba(251, 191, 36, 0.4),
-        inset 0 1px 0 rgba(255, 255, 255, 0.4);
-    z-index: 10;
-    border-color: rgba(180, 83, 9, 0.6);
-}
-
-.booking-label {
-    font-weight: 700;
-    text-shadow:
-        0 1px 2px rgba(255, 255, 255, 0.3),
-        0 -1px 1px rgba(0, 0, 0, 0.2);
-    letter-spacing: 0.025em;
-    position: relative;
-    z-index: 1;
-}
-
-/* Support for relative positioning on table rows */
+/* Relative positioning for booking bars */
 .car-row {
     position: relative;
 }
 
-.day-cell {
-    padding: 1rem;
-    border: 1px solid var(--border);
-    min-height: 60px;
+/* -------------------------------------------------------------------------- */
+/* PREMIUM BOOKING BAR */
+/* -------------------------------------------------------------------------- */
+.booking-bar {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 34px;
+    /* Modern Indigo-Violet Gradient */
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    /* Clean borders */
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    /* "Pill" shape for modern look */
+    border-radius: 4px;
+    /* Content alignment */
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    /* Text Styles */
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #ffffff;
+    letter-spacing: 0.02em;
+    /* Shadows */
+    box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.25),
+        0 2px 4px -1px rgba(99, 102, 241, 0.15);
+    cursor: grab;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 10;
+    overflow: hidden;
+    white-space: nowrap;
 }
 
-.day-header {
-    position: relative;
+.booking-bar:hover {
+    transform: translateY(-50%) scale(1.02);
+    box-shadow: 0 12px 20px -5px rgba(99, 102, 241, 0.4);
+    z-index: 30;
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.booking-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.booking-label i {
+    opacity: 0.7;
 }
 
 /* Buttons */
@@ -398,6 +444,7 @@ header {
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
     transform: translateY(20px);
     transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border-radius: 16px;
 }
 
 .modal.open .modal-content {
@@ -409,8 +456,13 @@ header {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 2rem;
+    padding: 1.5rem;
     padding-bottom: 1rem;
     border-bottom: 1px solid var(--border);
+}
+
+.modal-body {
+    padding: 1.5rem;
 }
 
 .close-btn {
@@ -424,54 +476,6 @@ header {
 /* Forms */
 .form-group {
     margin-bottom: 1.25rem;
-}
-
-/* Sidebar Navigation optimization */
-.sidebar nav a {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    color: var(--text-muted);
-    text-decoration: none;
-    padding: 1rem;
-    border-radius: 12px;
-    transition: background-color 0.2s ease, color 0.2s ease;
-    /* Specific properties */
-    margin-bottom: 0.5rem;
-}
-
-/* Stats Card optimization */
-.stat-card {
-    background: rgba(30, 41, 59, 0.85);
-    /* Slightly more opaque -> less blending cost */
-    /* backdrop-filter: blur(10px); Removed for performance testing, user says it lags.
-       If we want to keep it, we need to be careful.
-       Let's keep it but ensure no animation triggers repaint.
-       Actually, standard glass on static items is fine.
-       The issue is likely the Section Swap animation.
-    */
-    backdrop-filter: blur(8px);
-    /* Reduced blue radius */
-    border: 1px solid var(--border);
-    padding: 1.5rem;
-    border-radius: 16px;
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-}
-
-/* Glass Panel optimization */
-.glass-panel {
-    background: rgba(30, 41, 59, 0.75);
-    backdrop-filter: blur(10px);
-    /* Reduced from 12px */
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 1.5rem;
-    overflow: hidden;
-    /* Force GPU layer */
-    transform: translateZ(0);
 }
 
 .form-row {
@@ -498,36 +502,17 @@ select {
     outline: none;
 }
 
-/* Custom Date Input Styling removed to fix mobile overlap */
-input[type="date"] {
-    position: relative;
-    color: var(--text-main);
-    /* Ensure native appearance for reliability */
-    appearance: none;
-    -webkit-appearance: none;
-    background: #0f172a;
-    min-height: 44px;
-    /* Touch target size */
-}
-
-/* 
-input[type="date"]::-webkit-datetime-edit { color: transparent; }
-input[type="date"]::before { ... } 
-REMOVED due to iOS Double Text Issue 
-*/
-
 input:focus,
 select:focus {
     border-color: var(--primary);
     box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
 }
 
+
 /* Sections */
-/* Simplified FadeIn - Opacity Only (Cheaper than transform) */
 .content-section {
     display: none;
     animation: fadeIn 0.4s ease-out;
-    /* Slightly longer but smoother curve */
     will-change: opacity;
 }
 
@@ -538,12 +523,10 @@ select:focus {
 @keyframes fadeIn {
     from {
         opacity: 0;
-        /* transform: translateY(10px); REMOVED: Moving blurred elements is expensive */
     }
 
     to {
         opacity: 1;
-        /* transform: translateY(0); */
     }
 }
 
@@ -576,13 +559,11 @@ select:focus {
     background: rgba(255, 255, 255, 0.02);
 }
 
-/* ... existing code ... */
-
 .data-table td {
     color: var(--text-main);
 }
 
-/* Utilities for Responsive */
+/* Display Utilities */
 .mobile-only {
     display: none;
 }
@@ -591,10 +572,8 @@ select:focus {
     display: block;
 }
 
-/* Mobile Responsive Styles */
+/* Mobile Responsive */
 @media (max-width: 768px) {
-
-    /* Layout Adjustments */
     .app-container {
         flex-direction: column;
         height: auto;
@@ -603,23 +582,19 @@ select:focus {
 
     .sidebar {
         display: none;
-        /* Hide Sidebar on Mobile */
     }
 
     .main-content {
         padding: 1rem;
         height: 100vh;
-        /* Full height */
     }
 
-    /* Header Adjustments */
     header {
         flex-direction: row;
         justify-content: space-between;
         margin-bottom: 1.5rem;
     }
 
-    /* Hide complex desktop elements */
     .desktop-only {
         display: none !important;
     }
@@ -628,19 +603,16 @@ select:focus {
         display: block !important;
     }
 
-    /* Adjust Stats Grid */
     .stats-grid {
         grid-template-columns: 1fr 1fr;
-        /* 2 cols */
         gap: 1rem;
     }
 
     .stat-card:last-child {
         grid-column: span 2;
-        /* Make last card full width */
     }
 
-    /* Mobile Booking History List Styles */
+    /* Mobile Booking List */
     .history-item {
         background: #1e293b;
         border: 1px solid var(--border);
@@ -652,27 +624,9 @@ select:focus {
         align-items: center;
     }
 
-    .h-date {
-        font-weight: 600;
-        font-size: 1rem;
-        margin-bottom: 4px;
-    }
-
-    .h-car {
-        font-size: 0.85rem;
-        color: var(--text-muted);
-    }
-
-    .h-status {
-        font-size: 0.75rem;
-        padding: 2px 8px;
-        border-radius: 4px;
-    }
-
-    /* Modal - Make it feel like a full page on mobile */
+    /* Modal Mobile */
     .modal {
         align-items: flex-end;
-        /* Slide up from bottom */
     }
 
     .modal-content {
@@ -684,7 +638,6 @@ select:focus {
         overflow-y: auto;
     }
 
-    /* Bigger Buttons for Touch */
     .btn-primary {
         padding: 1rem;
         width: 100%;
@@ -692,7 +645,6 @@ select:focus {
         font-size: 1.1rem;
     }
 
-    /* Booking Button on Dashboard */
     header .btn-primary {
         position: fixed;
         bottom: 20px;
@@ -704,12 +656,7 @@ select:focus {
         padding: 1rem 1.5rem;
     }
 
-    header h1 {
-        font-size: 1.5rem;
-    }
-
     .date-selector {
         display: none;
-        /* Hide date selector on mobile dashboard for simplicity */
     }
 }
