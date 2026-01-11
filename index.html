@@ -5,198 +5,645 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Company Car Booking</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Fonts -->
     <link
-        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Bai+Jamjuree:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
+
+    <!-- Vue 3 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+    <!-- LINE LIFF SDK -->
+    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
+    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Bai Jamjuree"', 'sans-serif'], // Thai friendly font
+                        heading: ['"Outfit"', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9', // Sky blue
+                            600: '#0284c7',
+                            900: '#0c4a6e',
+                        },
+                        accent: {
+                            500: '#6366f1', // Indigo
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #f8fafc;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        }
+
+        /* Hide scrollbar for car list */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
 </head>
 
-<body>
-    <div class="app-container">
-        <!-- Sidebar -->
-        <aside class="sidebar">
-            <div class="logo">
-                <i class="fa-solid fa-car-side"></i>
-                <span>CarPool</span>
-            </div>
-            <nav>
-                <a href="#" class="active" onclick="showSection('dashboard')">
-                    <i class="fa-solid fa-grid-2"></i> Dashboard
-                </a>
-                <a href="#" onclick="showSection('bookings')">
-                    <i class="fa-solid fa-calendar-check"></i> Bookings
-                </a>
-                <a href="#" onclick="showSection('cars')">
-                    <i class="fa-solid fa-car"></i> Cars
-                </a>
-            </nav>
-            <div class="user-profile">
-                <div class="avatar">U</div>
-                <div class="info">
-                    <span class="name">User</span>
-                    <span class="role">Admin</span>
-                </div>
-            </div>
-        </aside>
+<body class="text-slate-800 antialiased h-screen flex flex-col">
 
-        <!-- Main Content -->
-        <main class="main-content">
-            <header>
-                <h1>Dashboard</h1>
-                <div class="actions">
-                    <div class="date-selector">
-                        <button id="prevMonth"><i class="fa-solid fa-chevron-left"></i></button>
-                        <span id="currentMonthYear">January 2026</span>
-                        <button id="nextMonth"><i class="fa-solid fa-chevron-right"></i></button>
+    <div id="app" class="flex-1 flex flex-col max-w-md mx-auto w-full bg-slate-50 relative h-full">
+
+        <!-- Header -->
+        <header
+            class="bg-white/80 backdrop-blur-md sticky top-0 z-20 px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+            <div>
+                <h1 class="font-heading text-xl font-bold text-slate-800">Reservation</h1>
+                <p class="text-xs text-slate-500 font-medium">จองรถบริษัท</p>
+            </div>
+            <div v-if="profile" class="flex items-center gap-3">
+                <div class="text-right hidden sm:block">
+                    <p class="text-sm font-bold text-slate-700">{{ profile.displayName }}</p>
+                    <p class="text-[10px] text-green-500 font-semibold uppercase tracking-wider">Online</p>
+                </div>
+                <img :src="profile.pictureUrl" alt="Profile"
+                    class="w-10 h-10 rounded-full border-2 border-white shadow-sm object-cover">
+            </div>
+            <div v-else class="w-10 h-10 rounded-full bg-slate-200 animate-pulse"></div>
+        </header>
+
+        <!-- Bottom Navigation -->
+        <nav
+            class="bg-white border-t border-slate-200 fixed bottom-0 left-0 right-0 z-40 flex justify-around items-center h-20 pb-2 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+            <button @click="currentTab = 'booking'"
+                :class="['flex-1 flex flex-col items-center justify-center gap-1 h-full', currentTab === 'booking' ? 'text-brand-600' : 'text-slate-400']">
+                <i class="fa-solid fa-calendar-plus text-xl mb-1"></i>
+                <span class="text-[10px] font-bold tracking-wide">จองรถ</span>
+            </button>
+            <button @click="currentTab = 'schedule'"
+                :class="['flex-1 flex flex-col items-center justify-center gap-1 h-full', currentTab === 'schedule' ? 'text-brand-600' : 'text-slate-400']">
+                <i class="fa-solid fa-calendar-days text-xl mb-1"></i>
+                <span class="text-[10px] font-bold tracking-wide">ตารางรถ</span>
+            </button>
+        </nav>
+
+        <!-- Main Content (Scrollable) -->
+        <main class="flex-1 overflow-y-auto p-6 space-y-6 pb-28">
+
+            <!-- Welcome / Status -->
+            <div v-if="!liffReady" class="flex flex-col items-center justify-center py-10 space-y-4">
+                <div class="w-8 h-8 border-4 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
+                <p class="text-sm text-slate-400">Connecting to LINE...</p>
+            </div>
+
+            <!-- VIEW: BOOKING FORM -->
+            <div v-else-if="currentTab === 'booking'">
+                <!-- Section: User Name -->
+                <section class="space-y-4 mb-6">
+                    <div class="flex items-center gap-2 mb-2">
+                        <i class="fa-solid fa-user-pen text-brand-500"></i>
+                        <h2 class="text-sm font-bold text-slate-700 tracking-wide uppercase">ชื่อผู้จอง</h2>
                     </div>
-                    <button class="btn-primary" onclick="openBookingModal()">
-                        <i class="fa-solid fa-plus"></i> จองรถใหม่
+                    <div class="space-y-1">
+                        <input type="text" v-model="form.username" placeholder="ระบุชื่อผู้จอง..."
+                            class="w-full bg-white border border-slate-200 text-slate-700 text-sm rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-transparent block p-3 shadow-sm outline-none transition-all">
+                    </div>
+                </section>
+
+                <!-- Section: Date Selection (No Time) -->
+                <section class="space-y-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <i class="fa-regular fa-calendar-check text-brand-500"></i>
+                        <h2 class="text-sm font-bold text-slate-700 tracking-wide uppercase">ระบุวันที่ใชรถ</h2>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="space-y-1">
+                            <label class="text-xs font-semibold text-slate-500">รับรถ (dd/mm/yyyy)</label>
+                            <div class="relative w-full h-[46px]">
+                                <!-- Display Input (Visual Only) -->
+                                <input type="text" :value="formatDateDisplay(form.start)" placeholder="dd/mm/yyyy"
+                                    readonly
+                                    class="w-full h-full bg-white border border-slate-200 text-slate-700 text-sm rounded-xl focus:ring-0 block p-3 shadow-sm outline-none transition-all absolute inset-0 z-0">
+
+                                <!-- Native Picker (Invisible Overlay) -->
+                                <input type="date" v-model="form.start" :min="minDate"
+                                    class="w-full h-full opacity-0 absolute inset-0 z-10 cursor-pointer">
+
+                                <i
+                                    class="fa-regular fa-calendar-days text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 z-0"></i>
+                            </div>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-xs font-semibold text-slate-500">คืนรถ (dd/mm/yyyy)</label>
+                            <div class="relative w-full h-[46px]">
+                                <!-- Display Input (Visual Only) -->
+                                <input type="text" :value="formatDateDisplay(form.end)" placeholder="dd/mm/yyyy"
+                                    readonly
+                                    class="w-full h-full bg-white border border-slate-200 text-slate-700 text-sm rounded-xl focus:ring-0 block p-3 shadow-sm outline-none transition-all absolute inset-0 z-0">
+
+                                <!-- Native Picker (Invisible Overlay) -->
+                                <input type="date" v-model="form.end" :min="form.start || minDate"
+                                    class="w-full h-full opacity-0 absolute inset-0 z-10 cursor-pointer">
+
+                                <i
+                                    class="fa-regular fa-calendar-days text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 z-0"></i>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section: Available Cars -->
+                <section class="mt-8 space-y-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-car-side text-brand-500"></i>
+                            <h2 class="text-sm font-bold text-slate-700 tracking-wide uppercase">เลือกรถที่ว่าง</h2>
+                        </div>
+                        <span v-if="availableCars.length > 0"
+                            class="bg-brand-50 text-brand-600 text-[10px] font-bold px-2 py-1 rounded-full border border-brand-100">{{
+                            availableCars.length }} คัน</span>
+                    </div>
+
+                    <div v-if="!form.start || !form.end"
+                        class="p-6 text-center border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50">
+                        <i class="fa-regular fa-calendar text-slate-300 text-3xl mb-2"></i>
+                        <p class="text-sm text-slate-400">กรุณาเลือกวันที่รับและคืนรถ<br>เพื่อดูรถที่ว่าง</p>
+                    </div>
+
+                    <div v-else-if="loadingBookings" class="py-10 text-center">
+                        <i class="fa-solid fa-circle-notch fa-spin text-brand-500 text-xl"></i>
+                        <p class="text-xs text-slate-400 mt-2">Checking schedule...</p>
+                    </div>
+
+                    <div v-else-if="availableCars.length === 0"
+                        class="p-6 text-center border border-red-100 bg-red-50 rounded-2xl">
+                        <i class="fa-regular fa-face-frown text-red-400 text-2xl mb-2"></i>
+                        <p class="text-sm text-red-600 font-medium">ไม่พบรถว่างในช่วงเวลานี้</p>
+                        <p class="text-xs text-red-400">รถทุกคันถูกจองแล้ว</p>
+                    </div>
+
+                    <div v-else class="grid grid-cols-1 gap-3">
+                        <div v-for="car in availableCars" :key="car.id" @click="selectCar(car)" :class="['relative group cursor-pointer rounded-2xl p-4 border transition-all duration-200 ease-out flex items-center justify-between', 
+                                form.carId === car.id 
+                                ? 'bg-brand-50 border-brand-500 shadow-md ring-1 ring-brand-500' 
+                                : 'bg-white border-slate-200 shadow-sm hover:border-brand-300 hover:shadow-md']">
+                            <div class="flex items-center gap-4">
+                                <div
+                                    :class="['w-12 h-12 rounded-xl flex items-center justify-center text-xl shadow-inner', 
+                                    car.type === 'EV' ? 'bg-gradient-to-br from-emerald-100 to-emerald-200 text-emerald-600' : 'bg-gradient-to-br from-slate-100 to-slate-200 text-slate-500']">
+                                    <i :class="car.type === 'EV' ? 'fa-solid fa-bolt' : 'fa-solid fa-gas-pump'"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-slate-800 text-base font-heading">{{ car.model }}</h3>
+                                    <div class="flex items-center gap-2 text-xs text-slate-500">
+                                        <span
+                                            class="bg-slate-100 px-1.5 py-0.5 rounded text-[10px] font-mono tracking-wide text-slate-600 border border-slate-200">{{
+                                            car.plate }}</span>
+                                        <span class="w-1 h-1 rounded-full bg-slate-300"></span>
+                                        <span>{{ car.color }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div v-if="form.carId === car.id" class="absolute top-4 right-4 text-brand-500">
+                                <i class="fa-solid fa-circle-check text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section: Purpose -->
+                <section class="mt-8 space-y-4" v-if="form.carId">
+                    <div class="flex items-center gap-2 mb-2">
+                        <i class="fa-solid fa-pen-to-square text-brand-500"></i>
+                        <h2 class="text-sm font-bold text-slate-700 tracking-wide uppercase">รายละเอียดการใช้</h2>
+                    </div>
+
+                    <!-- Usage Type Radio -->
+                    <div class="space-y-2 mb-4">
+                        <label class="text-xs font-semibold text-slate-500">ประเภทการใช้งาน</label>
+                        <div class="flex items-center gap-4">
+                            <label
+                                class="flex items-center gap-2 cursor-pointer bg-white border border-slate-200 rounded-xl px-4 py-3 flex-1 shadow-sm transition-all hover:border-brand-300"
+                                :class="{'ring-1 ring-brand-500 border-brand-500 bg-brand-50': form.usageType === 'Work'}">
+                                <div class="relative flex items-center">
+                                    <input type="radio" v-model="form.usageType" value="Work"
+                                        class="peer h-4 w-4 border-slate-300 text-brand-600 focus:ring-brand-500">
+                                </div>
+                                <span class="text-sm font-medium text-slate-700">ใช้ไปทำงาน</span>
+                            </label>
+
+                            <label
+                                class="flex items-center gap-2 cursor-pointer bg-white border border-slate-200 rounded-xl px-4 py-3 flex-1 shadow-sm transition-all hover:border-brand-300"
+                                :class="{'ring-1 ring-brand-500 border-brand-500 bg-brand-50': form.usageType === 'Personal'}">
+                                <div class="relative flex items-center">
+                                    <input type="radio" v-model="form.usageType" value="Personal"
+                                        class="peer h-4 w-4 border-slate-300 text-brand-600 focus:ring-brand-500">
+                                </div>
+                                <span class="text-sm font-medium text-slate-700">ส่วนตัว</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="text-xs font-semibold text-slate-500">รายละเอียด / สถานที่</label>
+                        <textarea v-model="form.purpose" rows="2" placeholder="ระบุสถานที่ หรือรายละเอียดเพิ่มเติม..."
+                            class="w-full bg-white border border-slate-200 text-slate-700 text-sm rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-transparent block p-3 shadow-sm outline-none transition-all resize-none"></textarea>
+                    </div>
+                </section>
+
+                <!-- Submit Button Area (Only show in Booking Tab) -->
+                <div class="mt-8">
+                    <button @click="submitBooking" :disabled="!isValid" :class="['w-full py-4 rounded-xl font-bold text-sm tracking-wide shadow-lg flex items-center justify-center gap-2 transition-all',
+                            isValid 
+                            ? 'bg-brand-600 text-white shadow-brand-500/30 hover:bg-brand-700 hover:shadow-brand-500/40 active:scale-[0.98]' 
+                            : 'bg-slate-100 text-slate-400 cursor-not-allowed shadow-none']">
+                        <span v-if="submitting"><i
+                                class="fa-solid fa-circle-notch fa-spin mr-2"></i>Processing...</span>
+                        <span v-else>Confirm Booking</span>
                     </button>
                 </div>
-            </header>
-
-            <!-- Dashboard Section -->
-            <section id="dashboard" class="content-section active">
-                <!-- Quick Stats -->
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="icon blue"><i class="fa-solid fa-car"></i></div>
-                        <div class="details">
-                            <h3>Total Cars</h3>
-                            <span id="statTotalCars">8</span>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="icon green"><i class="fa-solid fa-check"></i></div>
-                        <div class="details">
-                            <h3>Available Today</h3>
-                            <span id="statAvailable">5</span>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="icon amber"><i class="fa-solid fa-clock"></i></div>
-                        <div class="details">
-                            <h3>In Use</h3>
-                            <span id="statInUse">3</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Timeline View (Desktop/Tablet) -->
-                <div class="timeline-container glass-panel desktop-only">
-                    <div class="timeline-header">
-                        <h2>Availability Timeline</h2>
-                        <div class="legend">
-                            <span class="item"><span class="dot fuel"></span> Fuel</span>
-                            <span class="item"><span class="dot ev"></span> EV</span>
-                        </div>
-                    </div>
-                    <div class="timeline-scroll-wrapper">
-                        <div class="timeline-grid" id="timelineGrid">
-                            <!-- JS will render this -->
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Mobile History View -->
-                <div class="mobile-only" style="margin-top: 2rem;">
-                    <h3 style="margin-bottom: 1rem; color: var(--text-muted);">รายการล่าสุด (Recent Bookings)</h3>
-                    <div id="mobileHistoryList">
-                        <!-- JS Populated -->
-                    </div>
-                </div>
-            </section>
-
-            <!-- Bookings List Section -->
-            <section id="bookings" class="content-section">
-                <div class="glass-panel">
-                    <div class="timeline-header">
-                        <h2><i class="fa-solid fa-list"></i> รายการจองทั้งหมด</h2>
-                    </div>
-                    <div class="table-container">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>วันที่จอง (Start)</th>
-                                    <th>วันที่คืน (End)</th>
-                                    <th>ผู้จอง (User)</th>
-                                    <th>Job (Purpose)</th>
-                                    <th>ทะเบียนรถ (Plate)</th>
-                                    <th>รุ่นรถ (Model)</th>
-                                    <th>สถานะ (Status)</th>
-                                    <th>จัดการ (Actions)</th>
-                                </tr>
-                            </thead>
-                            <tbody id="bookingsTableBody">
-                                <!-- JS Populated -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-        </main>
-    </div>
-
-    <!-- Booking Modal -->
-    <div id="bookingModal" class="modal">
-        <div class="modal-content glass-panel">
-            <div class="modal-header">
-                <h2><i class="fa-solid fa-calendar-plus"></i> จองรถใช้งาน</h2>
-                <button class="close-btn" onclick="closeBookingModal()"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <form id="bookingForm">
-                <div class="form-group">
-                    <label>ผู้จอง (Name)</label>
-                    <input type="text" id="userName" required placeholder="ชื่อผู้จอง">
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>วันที่เริ่ม (Start Date)</label>
-                        <input type="date" id="startDate" required onchange="filterAvailableCars()">
+
+            <!-- VIEW: SCHEDULE -->
+            <div v-else-if="currentTab === 'schedule'" class="space-y-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="font-heading text-lg font-bold text-slate-700">Car Schedule</h2>
+                        <p class="text-xs text-slate-400">เช็คตารางรถว่าง (Coming 30 Days)</p>
                     </div>
-                    <div class="form-group">
-                        <label>วันที่คืน (End Date)</label>
-                        <input type="date" id="endDate" required onchange="filterAvailableCars()">
+                    <button @click="fetchBookings"
+                        class="text-brand-500 text-sm hover:bg-brand-50 p-2 rounded-full transition-colors"><i
+                            :class="['fa-solid fa-rotate-right', loadingBookings ? 'fa-spin' : '']"></i></button>
+                </div>
+
+                <div v-if="loadingBookings" class="py-10 text-center">
+                    <i class="fa-solid fa-circle-notch fa-spin text-brand-500 text-xl"></i>
+                    <p class="text-xs text-slate-400 mt-2">Loading schedule...</p>
+                </div>
+
+                <div v-else class="space-y-4">
+                    <!-- Loop All Cars -->
+                    <div v-for="car in carsWithSchedule" :key="car.id"
+                        class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm transition-all">
+                        <!-- Car Header (Click to Expand) -->
+                        <div @click="toggleExpand(car.id)"
+                            class="p-4 flex items-center justify-between border-b border-slate-50 bg-slate-50/50 cursor-pointer hover:bg-slate-100 transition-colors">
+                            <div class="flex items-center gap-4">
+                                <div
+                                    :class="['w-10 h-10 rounded-lg flex items-center justify-center text-lg shadow-inner', 
+                                    car.type === 'EV' ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-200 text-slate-500']">
+                                    <i :class="car.type === 'EV' ? 'fa-solid fa-bolt' : 'fa-solid fa-gas-pump'"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-slate-800 text-sm font-heading">{{ car.model }}</h3>
+                                    <div class="flex items-center gap-2">
+                                        <p
+                                            class="text-[10px] text-slate-500 font-mono bg-white inline-block px-1 rounded border border-slate-100">
+                                            {{ car.plate }}</p>
+                                        <span v-if="car.bookings.length > 0"
+                                            class="text-[10px] text-red-500 font-bold bg-red-50 px-1.5 py-0.5 rounded-full">{{
+                                            car.bookings.length }} จอง</span>
+                                        <span v-else
+                                            class="text-[10px] text-green-500 font-bold bg-green-50 px-1.5 py-0.5 rounded-full">ว่าง</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-slate-400">
+                                <i
+                                    :class="['fa-solid transition-transform duration-300', expandedCars[car.id] ? 'fa-chevron-up' : 'fa-chevron-down']"></i>
+                            </div>
+                        </div>
+
+                        <!-- Booking List (Collapsible) -->
+                        <div v-if="expandedCars[car.id]"
+                            class="p-4 border-t border-slate-100 bg-white animate-fade-in-down">
+                            <div v-if="car.bookings.length === 0"
+                                class="flex items-center gap-2 text-green-500 text-xs font-bold bg-green-50 p-3 rounded-lg border border-green-100">
+                                <i class="fa-regular fa-circle-check"></i>
+                                <span>ว่างยาวตลอด 30 วันนี้</span>
+                            </div>
+                            <ul v-else class="space-y-2">
+                                <li v-for="booking in car.bookings" :key="booking.id"
+                                    class="text-xs bg-slate-50 p-2 rounded-lg border-l-4 border-red-400 flex justify-between items-start">
+                                    <div>
+                                        <div class="font-bold text-slate-700">{{ formatDate(booking.start) }} - {{
+                                            formatDate(booking.end) }}</div>
+                                        <div class="text-slate-500 mt-0.5"><i
+                                                class="fa-solid fa-user text-[10px] mr-1"></i>{{ booking.user }}</div>
+                                    </div>
+                                    <span
+                                        class="text-[10px] bg-white border border-slate-200 px-1.5 py-0.5 rounded text-slate-500">{{
+                                        booking.purpose }}</span>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>รุ่นรถ (Car Model)</label>
-                        <select id="carModel" required onchange="filterPlates()">
-                            <option value="">กรุณาเลือกวันที่ก่อน...</option>
-                            <!-- Options populated by JS -->
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>ทะเบียนรถ (License Plate)</label>
-                        <select id="carPlate" required disabled>
-                            <option value="">รอเลือกรุ่นรถ...</option>
-                        </select>
-                    </div>
+            </div>
+
+        </main>
+
+        <!-- Success Modal -->
+        <div v-if="showSuccess"
+            class="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-6 animate-fade-in">
+            <div
+                class="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-sm text-center transform transition-all scale-100">
+                <div
+                    class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 text-green-500 text-3xl shadow-sm">
+                    <i class="fa-solid fa-check"></i>
                 </div>
-                <div class="form-group">
-                    <label>วัตถุประสงค์ (Purpose/Job)</label>
-                    <input type="text" id="jobPurpose" required placeholder="เช่น ไปหาลูกค้า, ส่วนตัว">
-                </div>
-                <div class="form-actions">
-                    <button type="button" class="btn-text" onclick="closeBookingModal()">ยกเลิก</button>
-                    <button type="submit" class="btn-primary">ยืนยันการจอง</button>
-                </div>
-            </form>
+                <h3 class="text-xl font-heading font-bold text-slate-800 mb-2">Booking Confirmed!</h3>
+                <p class="text-sm text-slate-500 mb-8 leading-relaxed">
+                    จองรถสำเร็จแล้ว<br>ระบบได้บันทึกข้อมูลของคุณเรียบร้อย</p>
+                <button @click="closeWindow"
+                    class="w-full py-3 bg-slate-800 text-white rounded-xl font-bold text-sm hover:bg-slate-900 transition-colors">
+                    Close
+                </button>
+            </div>
         </div>
+
     </div>
 
-    <div id="loadingOverlay"
-        style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; display:none; align-items:center; justify-content:center; flex-direction:column; color:white;">
-        <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 3rem; margin-bottom: 1rem;"></i>
-        <span>Creating Booking...</span>
-    </div>
+    <script>
+        const API_URL = 'https://script.google.com/macros/s/AKfycbz6o4K22hLOKYf6CRdznanyi-sm6zJcuoihYG2CbXexcmFoI-uhy8DgHR2IhEdqjB9kUA/exec'; // User needs to replace this
 
-    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-    <script src="app.js"></script>
+        const { createApp, ref, computed, onMounted, reactive, watch } = Vue;
+
+        createApp({
+            setup() {
+                // Mock Data
+                const cars = [
+                    { id: 1, plate: 'ญช 908 กท', model: 'Cap', color: 'สีขาว', type: 'Fuel' },
+                    { id: 2, plate: 'ฎฮ 9043 กท', model: 'Optra', color: 'สีดำ', type: 'Fuel' },
+                    { id: 3, plate: '1ขท 3650 กท', model: 'Optra', color: 'สีเทา', type: 'Fuel' },
+                    { id: 4, plate: 'สท 4690 กท', model: 'Optra', color: 'สีขาว', type: 'Fuel' },
+                    { id: 5, plate: '3ขช 2404 กท', model: 'Optra', color: 'สีเงิน', type: 'Fuel' },
+                    { id: 6, plate: '3ขช 3222 กท', model: 'Cap', color: 'สีน้ำตาล', type: 'Fuel' },
+                    { id: 7, plate: 'บ 3004 กท', model: 'MG4', color: 'สีขาว', type: 'EV' },
+                    { id: 8, plate: 'ฮ 2227 กท', model: 'MG4', color: 'สีเทา', type: 'EV' }
+                ];
+
+                const liffReady = ref(false);
+                const currentTab = ref('booking');
+                const profile = ref(null);
+                const exisingBookings = ref([]);
+                const loadingBookings = ref(false);
+                const submitting = ref(false);
+                const showSuccess = ref(false);
+                const expandedCars = reactive({});
+
+                const form = reactive({
+                    username: '',
+                    start: '',
+                    end: '',
+                    carId: null,
+                    usageType: 'Work', // Default
+                    purpose: ''
+                });
+
+                // Init LIFF
+                const initLiff = async () => {
+                    try {
+                        // Replace with your LIFF ID if running locally/testing
+                        await liff.init({ liffId: "2008863808-e2MCAccQ" });
+                        if (liff.isLoggedIn()) {
+                            profile.value = await liff.getProfile();
+                            form.username = profile.value.displayName; // Auto-fill
+                        } else {
+                            liff.login();
+                        }
+                        liffReady.value = true;
+                    } catch (err) {
+                        console.log('LIFF Init failed/mocking', err);
+                        // Mock for local browser testing
+                        setTimeout(() => {
+                            profile.value = {
+                                displayName: 'Test User',
+                                pictureUrl: 'https://ui-avatars.com/api/?name=Test+User&background=0ea5e9&color=fff',
+                                userId: 'U1234567890abcdef'
+                            };
+                            form.username = profile.value.displayName;
+                            liffReady.value = true;
+                        }, 1000);
+                    }
+                };
+
+                // Fetch Existing Bookings
+                const fetchBookings = async () => {
+                    if (API_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
+                        console.warn('API URL not set, using mock data');
+                        exisingBookings.value = []; // Use empty or mock
+                        return;
+                    }
+                    loadingBookings.value = true;
+                    try {
+                        const res = await fetch(API_URL);
+                        const data = await res.json();
+                        exisingBookings.value = data;
+                    } catch (e) {
+                        console.error('Fetch error', e);
+                    } finally {
+                        loadingBookings.value = false;
+                    }
+                };
+
+                // Watch Date Changes to refetch or just re-filter
+                watch(() => [form.start, form.end], () => {
+                    form.carId = null; // Reset selection on date change
+                });
+
+                // Compute Available Cars
+                const availableCars = computed(() => {
+                    if (!form.start || !form.end) return [];
+
+                    const reqStart = new Date(form.start + 'T00:00:00');
+                    const reqEnd = new Date(form.end + 'T23:59:59');
+
+                    if (reqStart > reqEnd) return []; // Invalid range
+
+                    // Filter logic: Exclude cars that have overlapping bookings
+                    const busyCarIds = exisingBookings.value.filter(booking => {
+                        // Assuming booking.start and booking.end are 'YYYY-MM-DD' strings from sheet
+                        // or full ISOs. If strictly dates, adds T00/T23 to ensure overlap checks
+                        // If the backend stores rough strings, we try to parse them.
+                        // Ideally backend stores YYYY-MM-DD for date-only mode.
+
+                        let bStartStr = booking.start;
+                        let bEndStr = booking.end;
+
+                        // Handle potential ISO strings by taking just the date part if previously stored with time
+                        if (bStartStr.includes('T')) bStartStr = bStartStr.split('T')[0];
+                        if (bEndStr.includes('T')) bEndStr = bEndStr.split('T')[0];
+
+                        const bStart = new Date(bStartStr + 'T00:00:00');
+                        const bEnd = new Date(bEndStr + 'T23:59:59');
+
+                        // Standard Overlap: Range A overlaps Range B if StartA <= EndB AND EndA >= StartB
+                        return bStart <= reqEnd && bEnd >= reqStart;
+                    }).map(b => parseInt(b.carId || 0)); // Ensure ID comparison
+
+                    return cars.filter(c => !busyCarIds.includes(c.id));
+                });
+
+                // Compute Schedule for all cars (Next 30 days)
+                const carsWithSchedule = computed(() => {
+                    const now = new Date();
+                    now.setHours(0, 0, 0, 0);
+                    const thirtyDaysLater = new Date(now);
+                    thirtyDaysLater.setDate(now.getDate() + 30);
+
+                    return cars.map(car => {
+                        // Find bookings for this car in future
+                        const carBookings = exisingBookings.value.filter(b => {
+                            if (parseInt(b.carId) !== car.id) return false;
+
+                            let bEndStr = b.end;
+                            if (bEndStr.includes('T')) bEndStr = bEndStr.split('T')[0];
+                            const bEnd = new Date(bEndStr + 'T23:59:59');
+
+                            return bEnd >= now; // Overlaps with future (roughly)
+                        }).sort((a, b) => new Date(a.start) - new Date(b.start));
+
+                        return {
+                            ...car,
+                            bookings: carBookings
+                        };
+                    });
+                });
+
+                const minDate = computed(() => {
+                    const now = new Date();
+                    return now.toISOString().split('T')[0];
+                });
+
+                const formatDate = (dateStr) => {
+                    if (!dateStr) return '-';
+                    if (dateStr.includes('T')) dateStr = dateStr.split('T')[0];
+                    const d = new Date(dateStr);
+                    // Format DD/MM
+                    return d.getDate().toString().padStart(2, '0') + '/' + (d.getMonth() + 1).toString().padStart(2, '0');
+                };
+
+                const formatDateDisplay = (dateVal) => {
+                    if (!dateVal) return '';
+                    const [y, m, d] = dateVal.split('-');
+                    return `${d}/${m}/${y}`;
+                }
+
+                const toggleExpand = (carId) => {
+                    expandedCars[carId] = !expandedCars[carId];
+                };
+
+                const isValid = computed(() => {
+                    return form.username && form.start && form.end && form.carId && form.purpose && form.usageType && !submitting.value;
+                });
+
+                const selectCar = (car) => {
+                    form.carId = car.id;
+                };
+
+                const submitBooking = async () => {
+                    if (!isValid.value) return;
+                    submitting.value = true;
+
+                    const selectedCar = cars.find(c => c.id === form.carId);
+
+                    // Combine Type and Details for Backend
+                    const combinedPurpose = `[${form.usageType === 'Work' ? 'งาน' : 'ส่วนตัว'}] ${form.purpose}`;
+
+                    const payload = {
+                        userId: profile.value?.userId || 'unknown',
+                        user: form.username,
+                        carPlate: selectedCar.plate,
+                        carModel: selectedCar.model,
+                        carId: selectedCar.id,
+                        start: form.start, // YYYY-MM-DD
+                        end: form.end,     // YYYY-MM-DD
+                        purpose: combinedPurpose
+                    };
+
+                    try {
+                        if (API_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
+                            // Mock Submit
+                            await new Promise(r => setTimeout(r, 1500));
+                            console.log('Mock Payload:', payload);
+                        } else {
+                            await fetch(API_URL, {
+                                method: 'POST',
+                                mode: 'no-cors', // Apps Script Web App requirement usually
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(payload)
+                            });
+                        }
+                        showSuccess.value = true;
+                    } catch (e) {
+                        alert('Submission failed');
+                    } finally {
+                        submitting.value = false;
+                    }
+                };
+
+                const closeWindow = () => {
+                    if (liff.isInClient()) {
+                        liff.closeWindow();
+                    } else {
+                        window.location.reload();
+                    }
+                };
+
+                onMounted(() => {
+                    initLiff();
+                    fetchBookings();
+                });
+
+                return {
+                    liffReady,
+                    profile,
+                    form,
+                    availableCars,
+                    isValid,
+                    selectCar,
+                    submitBooking,
+                    loadingBookings,
+                    submitting,
+                    showSuccess,
+                    closeWindow,
+                    currentTab,
+                    carsWithSchedule,
+                    formatDate,
+                    fetchBookings,
+                    expandedCars,
+                    toggleExpand,
+                    minDate,
+                    formatDateDisplay
+                };
+            }
+        }).mount('#app');
+    </script>
 </body>
 
 </html>
