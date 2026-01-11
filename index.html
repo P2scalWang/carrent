@@ -46,7 +46,7 @@
                 }
             }
         }
-    </>
+    </script>
     <style>
         body {
             background-color: #f8fafc;
@@ -399,8 +399,8 @@
 
     </div>
 
-    <>
-        const API_URL = 'https://script.google.com/macros/s/AKfycbwke9LNJQeFBwbgmpmUZyS4-QB8ZDqsxe_pRLkeFvykanJ7Y576NpRXcQcFu9l1HHNMbg/exec'; // User needs to replace this
+    <script>
+        const API_URL = 'https://script.google.com/macros/s/AKfycbxnun_T4TejdIOhXZD2WiTqDghKoJ2W3joDwqZmJpPwbdUGSRxXL1U-yPIP8WUwcQsvLQ/exec'; // User needs to replace this
 
         const { createApp, ref, computed, onMounted, reactive, watch } = Vue;
 
@@ -437,10 +437,19 @@
                 });
 
                 // Init LIFF
+                // Init LIFF
                 const initLiff = async () => {
+                    const liffTimeout = new Promise((_, reject) => {
+                        setTimeout(() => reject(new Error('Timeout')), 5000); // 5 seconds timeout
+                    });
+
                     try {
                         // Replace with your LIFF ID if running locally/testing
-                        await liff.init({ liffId: "2008863808-e2MCAccQ" });
+                        await Promise.race([
+                            liff.init({ liffId: "2008863808-e2MCAccQ" }),
+                            liffTimeout
+                        ]);
+
                         if (liff.isLoggedIn()) {
                             profile.value = await liff.getProfile();
                             form.username = profile.value.displayName; // Auto-fill
@@ -449,17 +458,15 @@
                         }
                         liffReady.value = true;
                     } catch (err) {
-                        console.log('LIFF Init failed/mocking', err);
-                        // Mock for local browser testing
-                        setTimeout(() => {
-                            profile.value = {
-                                displayName: 'Test User',
-                                pictureUrl: 'https://ui-avatars.com/api/?name=Test+User&background=0ea5e9&color=fff',
-                                userId: 'U1234567890abcdef'
-                            };
-                            form.username = profile.value.displayName;
-                            liffReady.value = true;
-                        }, 1000);
+                        console.log('LIFF Init failed/mocking/timeout', err);
+                        // Mock for local browser testing or fallback
+                        profile.value = {
+                            displayName: 'Guest/Offline',
+                            pictureUrl: '',
+                            userId: 'U_OFFLINE'
+                        };
+                        form.username = profile.value.displayName;
+                        liffReady.value = true;
                     }
                 };
 
