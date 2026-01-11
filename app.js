@@ -258,13 +258,17 @@ function renderDashboard() {
                     connectingLine.style.top = verticalOffset;
                     connectingLine.style.zIndex = zIndex;
 
-                    // 3. End Marker (Yellow outline box, transparent background)
+                    // 3. End Marker (Yellow outline box with end date)
                     const endMarker = document.createElement('div');
                     endMarker.className = 'booking-end-marker';
                     endMarker.style.left = `${endLeft}px`;
                     endMarker.style.top = verticalOffset;
                     endMarker.style.zIndex = zIndex + 1;
                     endMarker.title = tooltip;
+
+                    // Display end day number
+                    const endDayNum = new Date(booking.end).getDate();
+                    endMarker.innerHTML = `<span>${endDayNum}</span>`;
 
                     // Append all three elements
                     row.appendChild(startMarker);

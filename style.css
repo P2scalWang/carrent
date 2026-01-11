@@ -452,7 +452,7 @@ header {
     opacity: 0.9;
 }
 
-/* 3. End Marker (Yellow outline box, transparent) */
+/* 3. End Marker (Yellow outline box with date) */
 .booking-end-marker {
     position: absolute;
     transform: translateY(-50%);
@@ -464,6 +464,11 @@ header {
     border: 2px solid #fbbf24;
     border-radius: 4px;
 
+    /* Content alignment */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
     /* Shadow for visibility */
     box-shadow:
         0 0 0 1px rgba(251, 191, 36, 0.3),
@@ -471,6 +476,13 @@ header {
 
     cursor: pointer;
     transition: all 0.2s ease;
+}
+
+.booking-end-marker span {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #fbbf24;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 .booking-end-marker:hover {
