@@ -229,8 +229,8 @@ function renderDashboard() {
                     barDiv.style.left = `${leftPos}px`;
                     barDiv.style.width = `${barWidth}px`;
 
-                    // Subtle stacking for overlapping bookings (5px offset)
-                    barDiv.style.top = `calc(50% + ${index * 5}px)`;
+                    // Subtle stacking for overlapping bookings (3px offset)
+                    barDiv.style.top = `calc(50% + ${index * 3}px)`;
                     barDiv.style.transform = `translateY(-50%)`;
 
                     if (index > 0) {
