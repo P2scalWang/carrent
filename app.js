@@ -229,11 +229,14 @@ function renderDashboard() {
                     barDiv.style.left = `${leftPos}px`;
                     barDiv.style.width = `${barWidth}px`;
 
-                    // Fixed centering (No cascading)
-                    barDiv.style.top = `50%`;
+                    // Subtle stacking for overlapping bookings (5px offset)
+                    barDiv.style.top = `calc(50% + ${index * 5}px)`;
                     barDiv.style.transform = `translateY(-50%)`;
 
-                    if (index > 0) barDiv.style.zIndex = index + 10;
+                    if (index > 0) {
+                        barDiv.style.zIndex = index + 10;
+                        barDiv.style.opacity = "0.95";
+                    }
 
                     barDiv.title = tooltip;
 
