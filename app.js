@@ -395,15 +395,16 @@ window.updateStatus = async function (id, status) {
         renderDashboard();
         updateStats();
     }
-    // API call logic would go here
-    /*
-    await fetch(GOOGLE_SCRIPT_URL, { 
-        method: 'POST', 
-        mode: 'no-cors',
-        headers: {'Content-Type': 'text/plain'},
-        body: JSON.stringify({ action: 'updateStatus', id, status })
-    }); 
-    */
+    // API Sync
+    try {
+        await fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'updateStatus', id, status })
+        });
+        console.log("Status updated to Sheet");
+    } catch (e) { console.error(e); }
 }
 
 // Modal & Utils
@@ -480,22 +481,19 @@ if (bookingForm) {
         renderBookingsTable();
         updateStats();
 
-        // 8. (Optional) Send to API
-        /*
+        // 8. Send to API (Google Sheets)
         try {
-            document.getElementById('loadingOverlay').style.display = 'flex';
+            console.log("Sending to Sheet:", newBooking);
             await fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ action: 'createBooking', ...newBooking })
             });
+            console.log("Sent to Google Sheet (no-cors mode)");
         } catch (err) {
             console.error(err);
-        } finally {
-            document.getElementById('loadingOverlay').style.display = 'none';
         }
-        */
 
         alert('จองรถเรียบร้อยแล้ว (Booking Created)');
     });
