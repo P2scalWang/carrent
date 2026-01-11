@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Company Car Booking</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fa-solid fa-car-side"></i>
+                <span>CarPool</span>
+            </div>
+            <nav>
+                <a href="#" class="active" onclick="showSection('dashboard')">
+                    <i class="fa-solid fa-grid-2"></i> Dashboard
+                </a>
+                <a href="#" onclick="showSection('bookings')">
+                    <i class="fa-solid fa-calendar-check"></i> Bookings
+                </a>
+                <a href="#" onclick="showSection('cars')">
+                    <i class="fa-solid fa-car"></i> Cars
+                </a>
+            </nav>
+            <div class="user-profile">
+                <div class="avatar">U</div>
+                <div class="info">
+                    <span class="name">User</span>
+                    <span class="role">Admin</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header>
+                <h1>Dashboard</h1>
+                <div class="actions">
+                    <div class="date-selector">
+                        <button id="prevMonth"><i class="fa-solid fa-chevron-left"></i></button>
+                        <span id="currentMonthYear">January 2026</span>
+                        <button id="nextMonth"><i class="fa-solid fa-chevron-right"></i></button>
+                    </div>
+                    <button class="btn-primary" onclick="openBookingModal()">
+                        <i class="fa-solid fa-plus"></i> จองรถใหม่
+                    </button>
+                </div>
+            </header>
+
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="content-section active">
+                <!-- Quick Stats -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="icon blue"><i class="fa-solid fa-car"></i></div>
+                        <div class="details">
+                            <h3>Total Cars</h3>
+                            <span id="statTotalCars">8</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="icon green"><i class="fa-solid fa-check"></i></div>
+                        <div class="details">
+                            <h3>Available Today</h3>
+                            <span id="statAvailable">5</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="icon amber"><i class="fa-solid fa-clock"></i></div>
+                        <div class="details">
+                            <h3>In Use</h3>
+                            <span id="statInUse">3</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Timeline View (Desktop/Tablet) -->
+                <div class="timeline-container glass-panel desktop-only">
+                    <div class="timeline-header">
+                        <h2>Availability Timeline</h2>
+                        <div class="legend">
+                            <span class="item"><span class="dot fuel"></span> Fuel</span>
+                            <span class="item"><span class="dot ev"></span> EV</span>
+                        </div>
+                    </div>
+                    <div class="timeline-scroll-wrapper">
+                        <div class="timeline-grid" id="timelineGrid">
+                            <!-- JS will render this -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mobile History View -->
+                <div class="mobile-only" style="margin-top: 2rem;">
+                    <h3 style="margin-bottom: 1rem; color: var(--text-muted);">รายการล่าสุด (Recent Bookings)</h3>
+                    <div id="mobileHistoryList">
+                        <!-- JS Populated -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Bookings List Section -->
+            <section id="bookings" class="content-section">
+                <div class="glass-panel">
+                    <div class="timeline-header">
+                        <h2><i class="fa-solid fa-list"></i> รายการจองทั้งหมด</h2>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>วันที่จอง (Start)</th>
+                                    <th>วันที่คืน (End)</th>
+                                    <th>ผู้จอง (User)</th>
+                                    <th>Job (Purpose)</th>
+                                    <th>ทะเบียนรถ (Plate)</th>
+                                    <th>รุ่นรถ (Model)</th>
+                                    <th>สถานะ (Status)</th>
+                                    <th>จัดการ (Actions)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bookingsTableBody">
+                                <!-- JS Populated -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Booking Modal -->
+    <div id="bookingModal" class="modal">
+        <div class="modal-content glass-panel">
+            <div class="modal-header">
+                <h2><i class="fa-solid fa-calendar-plus"></i> จองรถใช้งาน</h2>
+                <button class="close-btn" onclick="closeBookingModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="bookingForm">
+                <div class="form-group">
+                    <label>ผู้จอง (Name)</label>
+                    <input type="text" id="userName" required placeholder="ชื่อผู้จอง">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>วันที่เริ่ม (Start Date)</label>
+                        <input type="date" id="startDate" required onchange="filterAvailableCars()">
+                    </div>
+                    <div class="form-group">
+                        <label>วันที่คืน (End Date)</label>
+                        <input type="date" id="endDate" required onchange="filterAvailableCars()">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>รุ่นรถ (Car Model)</label>
+                        <select id="carModel" required onchange="filterPlates()">
+                            <option value="">กรุณาเลือกวันที่ก่อน...</option>
+                            <!-- Options populated by JS -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>ทะเบียนรถ (License Plate)</label>
+                        <select id="carPlate" required disabled>
+                            <option value="">รอเลือกรุ่นรถ...</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>วัตถุประสงค์ (Purpose/Job)</label>
+                    <input type="text" id="jobPurpose" required placeholder="เช่น ไปหาลูกค้า, ส่วนตัว">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-text" onclick="closeBookingModal()">ยกเลิก</button>
+                    <button type="submit" class="btn-primary">ยืนยันการจอง</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="loadingOverlay"
+        style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; display:none; align-items:center; justify-content:center; flex-direction:column; color:white;">
+        <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+        <span>Creating Booking...</span>
+    </div>
+
+    <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
