@@ -385,6 +385,101 @@ header {
     opacity: 0.7;
 }
 
+/* -------------------------------------------------------------------------- */
+/* NEW BOOKING VISUALIZATION: START MARKER + LINE + END MARKER */
+/* -------------------------------------------------------------------------- */
+
+/* 1. Start Marker (Purple box with user icon and name) */
+.booking-start-marker {
+    position: absolute;
+    transform: translateY(-50%);
+    height: 32px;
+    width: auto;
+    min-width: 38px;
+    max-width: 120px;
+
+    /* Purple gradient background */
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+
+    /* Content alignment */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 8px;
+    gap: 4px;
+
+    /* Text styles */
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #ffffff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    /* Shadow for depth */
+    box-shadow:
+        0 2px 4px rgba(0, 0, 0, 0.15),
+        0 0 0 1px rgba(99, 102, 241, 0.3);
+
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.booking-start-marker:hover {
+    transform: translateY(-50%) scale(1.05);
+    box-shadow:
+        0 4px 8px rgba(0, 0, 0, 0.25),
+        0 0 0 2px rgba(99, 102, 241, 0.5);
+}
+
+.booking-start-marker i {
+    font-size: 0.85rem;
+}
+
+/* 2. Connecting Line (Red horizontal line) */
+.booking-connecting-line {
+    position: absolute;
+    transform: translateY(-50%);
+    height: 3px;
+
+    /* Red color */
+    background: #ef4444;
+    border-radius: 2px;
+
+    /* Lower z-index so markers appear on top */
+    opacity: 0.9;
+}
+
+/* 3. End Marker (Yellow outline box, transparent) */
+.booking-end-marker {
+    position: absolute;
+    transform: translateY(-50%);
+    height: 32px;
+    width: 38px;
+
+    /* Transparent background with yellow border */
+    background: transparent;
+    border: 2px solid #fbbf24;
+    border-radius: 4px;
+
+    /* Shadow for visibility */
+    box-shadow:
+        0 0 0 1px rgba(251, 191, 36, 0.3),
+        inset 0 0 4px rgba(251, 191, 36, 0.2);
+
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.booking-end-marker:hover {
+    transform: translateY(-50%) scale(1.05);
+    box-shadow:
+        0 0 0 2px rgba(251, 191, 36, 0.6),
+        inset 0 0 8px rgba(251, 191, 36, 0.3);
+}
+
 /* Buttons */
 .btn-primary {
     background: var(--primary);

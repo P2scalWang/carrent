@@ -229,29 +229,47 @@ function renderDashboard() {
 
                     const tooltip = `${getFormattedDate(booking.start)} - ${getFormattedDate(booking.end)} (${booking.user})`;
 
-                    const barDiv = document.createElement('div');
-                    barDiv.className = 'booking-bar';
-                    barDiv.style.left = `${adjustedLeft}px`;
-                    barDiv.style.width = `${adjustedWidth}px`;
+                    // Calculate positions for start and end cells
+                    const startCellRect = startCell.getBoundingClientRect();
+                    const endCellRect = endCell.getBoundingClientRect();
+                    const rowRectForCalc = row.getBoundingClientRect();
 
-                    // Subtle stacking for overlapping bookings (3px offset)
-                    barDiv.style.top = `calc(50% + ${index * 3}px)`;
-                    barDiv.style.transform = `translateY(-50%)`;
+                    const startLeft = startCellRect.left - rowRectForCalc.left + 1;
+                    const endLeft = endCellRect.left - rowRectForCalc.left + 1;
+                    const lineWidth = endLeft - startLeft - 40; // 40px for start marker width
 
-                    if (index > 0) {
-                        barDiv.style.zIndex = index + 10;
-                        barDiv.style.opacity = "0.95";
-                    }
+                    const verticalOffset = `calc(50% + ${index * 3}px)`;
+                    const zIndex = index > 0 ? index + 10 : 5;
 
-                    barDiv.title = tooltip;
+                    // 1. Start Marker (Purple box with user icon and name)
+                    const startMarker = document.createElement('div');
+                    startMarker.className = 'booking-start-marker';
+                    startMarker.style.left = `${startLeft}px`;
+                    startMarker.style.top = verticalOffset;
+                    startMarker.style.zIndex = zIndex + 2;
+                    startMarker.title = tooltip;
+                    startMarker.innerHTML = `<i class="fa-solid fa-user-circle"></i> ${booking.user}`;
 
-                    barDiv.innerHTML = `
-                        <span class="booking-label">
-                            <i class="fa-solid fa-user-circle"></i> ${booking.user}
-                        </span>
-                    `;
+                    // 2. Connecting Line (Red horizontal line)
+                    const connectingLine = document.createElement('div');
+                    connectingLine.className = 'booking-connecting-line';
+                    connectingLine.style.left = `${startLeft + 38}px`; // Start after the start marker
+                    connectingLine.style.width = `${lineWidth}px`;
+                    connectingLine.style.top = verticalOffset;
+                    connectingLine.style.zIndex = zIndex;
 
-                    row.appendChild(barDiv);
+                    // 3. End Marker (Yellow outline box, transparent background)
+                    const endMarker = document.createElement('div');
+                    endMarker.className = 'booking-end-marker';
+                    endMarker.style.left = `${endLeft}px`;
+                    endMarker.style.top = verticalOffset;
+                    endMarker.style.zIndex = zIndex + 1;
+                    endMarker.title = tooltip;
+
+                    // Append all three elements
+                    row.appendChild(startMarker);
+                    row.appendChild(connectingLine);
+                    row.appendChild(endMarker);
                 }
             });
         });
