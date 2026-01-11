@@ -400,7 +400,7 @@ window.updateStatus = async function (id, status) {
         await fetch(GOOGLE_SCRIPT_URL, {
             method: 'POST',
             mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'text/plain' },
             body: JSON.stringify({ action: 'updateStatus', id, status })
         });
         console.log("Status updated to Sheet");
@@ -487,7 +487,7 @@ if (bookingForm) {
             await fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'text/plain' },
                 body: JSON.stringify({ action: 'createBooking', ...newBooking })
             });
             console.log("Sent to Google Sheet (no-cors mode)");
