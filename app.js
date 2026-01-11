@@ -157,14 +157,14 @@ function renderDashboard() {
         <table class="calendar-table">
             <thead>
                 <tr>
-                    <th style="min-width: ${FIRST_COLUMN_WIDTH}px; left: 0; z-index: 20;">Car / Date</th>
+                    <th style="width: ${FIRST_COLUMN_WIDTH}px; left: 0; z-index: 20;">Car / Date</th>
     `;
 
     // Render Headers
     for (let d = 1; d <= daysInMonth; d++) {
         const isWeekend = new Date(year, month, d).getDay() % 6 === 0;
         const bg = (d === today && new Date().getMonth() === month) ? 'rgba(59, 130, 246, 0.3)' : '';
-        html += `<th class="day-header" data-day="${d}" style="min-width: ${CELL_WIDTH}px; background: ${bg}">${d}</th>`;
+        html += `<th class="day-header" data-day="${d}" style="background: ${bg}">${d}</th>`;
     }
     html += `</tr></thead><tbody>`;
 

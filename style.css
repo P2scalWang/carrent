@@ -262,6 +262,8 @@ header {
     width: 100%;
     border-collapse: collapse;
     min-width: 800px;
+    table-layout: fixed;
+    /* Force equal column widths */
 }
 
 .calendar-table th {
@@ -276,6 +278,8 @@ header {
     z-index: 20;
     border-bottom: 2px solid #334155;
     text-align: center;
+    width: 40px;
+    /* Fixed width for date columns */
 }
 
 /* Zebra Striping for better row visibility */
