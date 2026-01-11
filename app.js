@@ -218,16 +218,21 @@ function renderDashboard() {
                     const startRect = startCell.getBoundingClientRect();
                     const endRect = endCell.getBoundingClientRect();
 
-                    // Precise calculation relative to the row
+                    // Precise calculation: align to grid lines
+                    // Account for 1px cell borders
                     const leftPos = startRect.left - rowRect.left;
-                    const barWidth = endRect.right - startRect.left;
+                    const barWidth = (endRect.right - startRect.left);
+
+                    // Adjust for visual grid alignment (inset by 1px on each side)
+                    const adjustedLeft = leftPos + 1;
+                    const adjustedWidth = barWidth - 2;
 
                     const tooltip = `${getFormattedDate(booking.start)} - ${getFormattedDate(booking.end)} (${booking.user})`;
 
                     const barDiv = document.createElement('div');
                     barDiv.className = 'booking-bar';
-                    barDiv.style.left = `${leftPos}px`;
-                    barDiv.style.width = `${barWidth}px`;
+                    barDiv.style.left = `${adjustedLeft}px`;
+                    barDiv.style.width = `${adjustedWidth}px`;
 
                     // Subtle stacking for overlapping bookings (3px offset)
                     barDiv.style.top = `calc(50% + ${index * 3}px)`;
