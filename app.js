@@ -125,27 +125,23 @@ window.filterAvailableCars = function () {
     const endDate = new Date(endVal + 'T23:59:59');
 
     bookings.forEach(b => {
-        if (b.status !== 'Approved') return; // Pending doesn't block? User said "Only approved shows on timeline". 
-        // Logic: Should Pending block? Usually yes to prevent double booking. 
-        // But if timeline hides it, it's confusing. 
-        // Let's assume ONLY Approved blocks availability for now as per previous context.
+        if (b.status !== 'Approved') return;
 
-        // Date overlap check
-        // Existing data might have times, but now we treat everything as full day overlap if dates touch?
-        // User said "don't choose time". So strict date overlap.
-
-        // Convert existing booking datetime to date logic
-        const bStart = new Date(b.start); // These might be ISO strings
+        const bStart = new Date(b.start);
         const bEnd = new Date(b.end);
 
         // Check overlap
         if (startDate <= bEnd && endDate >= bStart) {
             busyCarIds.add(b.carId);
+            console.log(`🚫 รถ ID ${b.carId} ไม่ว่าง (${b.carPlate}) เพราะถูกจองวันที่ ${b.start} ถึง ${b.end}`);
         }
     });
 
     // Filter Global CARS_DATA
     const availableCars = CARS_DATA.filter(c => !busyCarIds.has(c.id));
+
+    console.log(`📊 สรุป: จากรถทั้งหมด ${CARS_DATA.length} คัน มีรถว่าง ${availableCars.length} คัน`);
+    console.log(`✅ รถที่ว่าง:`, availableCars.map(c => c.plate));
 
     // Populate Models (Only available ones)
     const availableModels = [...new Set(availableCars.map(c => c.model))];
@@ -187,13 +183,14 @@ window.filterPlates = function () {
     }
 }
 
-// Render Timeline (Simple Month View designed as a list for now, can be upgraded to Gantt)
-// For this MVP, let's make a grid view: Days of Month vs Cars
+// Render Timeline with Gantt-style booking bars
 function renderDashboard() {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const today = new Date().getDate(); // Highlight today if in current month
+    const today = new Date().getDate();
+    const CELL_WIDTH = 40; // Must match CSS min-width
+    const FIRST_COLUMN_WIDTH = 200; // Car info column width
 
     document.getElementById('currentMonthYear').textContent =
         currentDate.toLocaleDateString('th-TH', { month: 'long', year: 'numeric' });
@@ -202,7 +199,7 @@ function renderDashboard() {
         <table class="calendar-table">
             <thead>
                 <tr>
-                    <th style="min-width: 200px; left: 0; z-index: 20; background: #0f172a;">Car / Date</th>
+                    <th style="min-width: ${FIRST_COLUMN_WIDTH}px; left: 0; z-index: 20; background: #0f172a;">Car / Date</th>
     `;
 
     // Render Headers (Days)
@@ -210,74 +207,87 @@ function renderDashboard() {
         const isWeekend = new Date(year, month, d).getDay() % 6 === 0;
         const bg = (d === today && new Date().getMonth() === month) ? 'rgba(59, 130, 246, 0.3)' :
             (isWeekend ? 'rgba(255, 255, 255, 0.05)' : '');
-        html += `<th style="min-width: 40px; background: ${bg}">${d}</th>`;
+        html += `<th style="min-width: ${CELL_WIDTH}px; background: ${bg}">${d}</th>`;
     }
     html += `</tr></thead><tbody>`;
 
-    // Render Rows (Cars)
+    // Render Rows (Cars) with booking bars
     CARS_DATA.forEach(car => {
         html += `
-            <tr>
+            <tr class="car-row">
                 <td class="car-cell" style="position: sticky; left: 0; background: #1e293b; z-index: 5;">
                     <div class="car-model">${car.model} <span class="dot ${car.type.toLowerCase()}" style="display:inline-block; width:6px; height:6px;"></span></div>
                     <div class="car-plate">${car.plate}</div>
                 </td>
         `;
 
-        // Render Cells
+        // Render empty cells for grid structure
         for (let d = 1; d <= daysInMonth; d++) {
-            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-
-            // Check for bookings on this day for this car
-            // Optimization: Filter specific bookings here
-            // CRITICAL CHANGE: Only show Approved bookings
-            const carBookings = bookings.filter(b => b.carId == car.id && b.status === 'Approved');
-            let cellContent = '';
-
-            // Very simple overlapping logic for cell visualization
-            // If booked, show bar. 
-            // NOTE: A proper Gantt would need pixel-perfect positioning. 
-            // Here we just mark the cell if there's any booking.
-
-            const daysBookings = carBookings.filter(b => {
-                const start = new Date(b.start).getDate();
-                const end = new Date(b.end).getDate();
-                const bMonth = new Date(b.start).getMonth();
-                // Simplified checks for same month
-                if (bMonth !== month) return false;
-                return d >= start && d <= end;
-            });
-
-            if (daysBookings.length > 0) {
-                // Determine style based on first booking found (simplified)
-                const bk = daysBookings[0];
-                const isStart = new Date(bk.start).getDate() === d;
-                const isEnd = new Date(bk.end).getDate() === d;
-
-                let style = 'background: rgba(59, 130, 246, 0.5);'; // Mid-bar
-                let text = '';
-
-                if (isStart && isEnd) {
-                    style = 'background: var(--primary); border-radius: 4px;';
-                    text = bk.user;
-                } else if (isStart) {
-                    style = 'background: linear-gradient(90deg, rgba(0,0,0,0) 0%, var(--primary) 20%); border-top-left-radius: 4px; border-bottom-left-radius: 4px;';
-                    text = bk.user;
-                } else if (isEnd) {
-                    style = 'background: linear-gradient(90deg, var(--primary) 80%, rgba(0,0,0,0) 100%); border-top-right-radius: 4px; border-bottom-right-radius: 4px;';
-                }
-
-                const tooltip = `${getFormattedDate(bk.start)} - ${getFormattedDate(bk.end)}\n${bk.user}: ${bk.purpose}`;
-                cellContent = `<div class="booking-bar-cell" style="${style} height: 80%; width: 100%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem;" title="${tooltip}">${text}</div>`;
-            }
-
-            html += `<td style="padding: 2px;">${cellContent}</td>`;
+            html += `<td class="day-cell"></td>`;
         }
+
         html += `</tr>`;
+
+        // Add booking bars for this car
+        const carBookings = bookings.filter(b => b.carId == car.id && b.status === 'Approved');
+
+        carBookings.forEach((booking, index) => {
+            const bStart = new Date(booking.start);
+            const bEnd = new Date(booking.end);
+            const bMonth = bStart.getMonth();
+
+            // Only render if booking is in current month
+            if (bMonth !== month) return;
+
+            const startDay = bStart.getDate();
+            const endDay = bEnd.getDate();
+            const duration = endDay - startDay + 1;
+
+            // Calculate position and width
+            const leftPos = FIRST_COLUMN_WIDTH + (startDay - 1) * CELL_WIDTH;
+            const barWidth = duration * CELL_WIDTH;
+
+            // Vertical offset for multiple bookings (stacking)
+            const topOffset = 50 + (index * 40); // Center + stack offset
+
+            const tooltip = `${getFormattedDate(booking.start)} - ${getFormattedDate(booking.end)}\n${booking.user}: ${booking.purpose}`;
+
+            // Insert booking bar after the row
+            const barHtml = `
+                <div class="booking-bar" 
+                     style="left: ${leftPos}px; width: ${barWidth}px; top: ${topOffset}%;"
+                     title="${tooltip}">
+                    <span class="booking-label">${booking.user}</span>
+                </div>
+            `;
+
+            // We'll append bars after table is rendered
+            // Store bar data for now
+            if (!window.pendingBookingBars) window.pendingBookingBars = [];
+            window.pendingBookingBars.push({
+                carId: car.id,
+                html: barHtml
+            });
+        });
     });
 
     html += `</tbody></table>`;
     timelineGrid.innerHTML = html;
+
+    // Now append booking bars to their respective rows
+    if (window.pendingBookingBars && window.pendingBookingBars.length > 0) {
+        const rows = timelineGrid.querySelectorAll('.car-row');
+
+        window.pendingBookingBars.forEach(bar => {
+            const carIndex = CARS_DATA.findIndex(c => c.id === bar.carId);
+            if (carIndex >= 0 && rows[carIndex]) {
+                rows[carIndex].insertAdjacentHTML('beforeend', bar.html);
+            }
+        });
+
+        // Clear pending bars
+        window.pendingBookingBars = [];
+    }
 }
 
 // Booking Logic
@@ -404,8 +414,12 @@ async function submitBookingToSheet(bookingData) {
                 },
                 body: JSON.stringify(payload)
             });
+
+            // Clear cache to force fresh data on next load
+            localStorage.removeItem('carrent_bookings_cache');
+
             // Fetch latest to get real timestamp/ID if needed, but optimistic is fine
-            // await fetchBookings(); 
+            await fetchBookings(true); // Force refresh
             alert(`จองสำเร็จ! (Saved to Sheet)`);
         } catch (error) {
             console.error('Sheet Error:', error);
@@ -580,44 +594,52 @@ function renderMobileHistory(bookingsData) {
 
 // --- API & DATA SYNC ---
 
-async function fetchBookings() {
+async function fetchBookings(forceRefresh = false) {
     if (!GOOGLE_SCRIPT_URL) return;
 
-    // Show partial loading indicator if needed
-    // const loadingOverlay = document.getElementById('loadingOverlay');
+    const CACHE_KEY = 'carrent_bookings_cache';
+    const CACHE_TIME_KEY = 'carrent_bookings_cache_time';
+    const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
     try {
+        // 1. Load from cache first (instant!)
+        if (!forceRefresh) {
+            const cachedData = localStorage.getItem(CACHE_KEY);
+            const cachedTime = localStorage.getItem(CACHE_TIME_KEY);
+
+            if (cachedData && cachedTime) {
+                const age = Date.now() - parseInt(cachedTime);
+
+                // Use cache if less than 5 minutes old
+                if (age < CACHE_DURATION) {
+                    console.log('⚡ Loading from cache (instant!)');
+                    const cached = JSON.parse(cachedData);
+                    bookings = processBookingsData(cached);
+
+                    // Render immediately
+                    renderDashboard();
+                    renderBookingsTable();
+                    updateStats();
+
+                    // Fetch fresh data in background (don't wait)
+                    fetchFreshDataInBackground();
+                    return;
+                }
+            }
+        }
+
+        // 2. Fetch fresh data if cache is old or forced
+        console.log('🔄 Fetching fresh data from server...');
         const response = await fetch(GOOGLE_SCRIPT_URL);
         const data = await response.json();
 
         if (Array.isArray(data)) {
-            // Map Data to System Format
-            bookings = data.map(b => {
-                // 1. Recover Car ID from Plate (Try to match)
-                const car = CARS_DATA.find(c => (b.carPlate || '').trim() === c.plate.trim());
+            // Save to cache
+            localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+            localStorage.setItem(CACHE_TIME_KEY, Date.now().toString());
 
-                // 2. Robust Date Fixer (Handles '2026-01-11 9.00.00' from Sheet)
-                const fixDate = (str) => {
-                    if (!str || str === 'NaN') return null;
-                    if (str instanceof Date) return str.toISOString();
-
-                    // Replace dots in time with colons: "9.00.00" -> "9:00:00"
-                    // But keep date separators if they are dots? Usually ISO uses hyphens.
-                    // Let's replace ONLY dots that look like time separators (followed by digits)
-                    let s = str.toString().replace(/(\d{1,2})\.(\d{2})\.(\d{2})/, '$1:$2:$3');
-                    return s;
-                };
-
-                return {
-                    ...b,
-                    carId: car ? car.id : 0, // Fallback ID
-                    carModel: b.carModel, // Trust Sheet data first
-                    carPlate: b.carPlate, // Trust Sheet data first
-                    start: fixDate(b.start),
-                    end: fixDate(b.end)
-                };
-            });
-            console.log("Bookings loaded:", bookings.length);
+            bookings = processBookingsData(data);
+            console.log("✅ Bookings loaded:", bookings.length);
 
             // Re-render everything
             renderDashboard();
@@ -626,7 +648,69 @@ async function fetchBookings() {
         }
     } catch (error) {
         console.error("Failed to fetch bookings:", error);
+
+        // Fallback to cache even if expired
+        const cachedData = localStorage.getItem(CACHE_KEY);
+        if (cachedData) {
+            console.log('⚠️ Using old cache as fallback');
+            bookings = processBookingsData(JSON.parse(cachedData));
+            renderDashboard();
+            renderBookingsTable();
+            updateStats();
+        }
     }
+}
+
+// Helper: Process raw data from API
+function processBookingsData(data) {
+    return data.map(b => {
+        // 1. Recover Car ID from Plate (Try to match)
+        const car = CARS_DATA.find(c => (b.carPlate || '').trim() === c.plate.trim());
+
+        // 2. Robust Date Fixer (Handles '2026-01-11 9.00.00' from Sheet)
+        const fixDate = (str) => {
+            if (!str || str === 'NaN') return null;
+            if (str instanceof Date) return str.toISOString();
+
+            // Replace dots in time with colons: "9.00.00" -> "9:00:00"
+            let s = str.toString().replace(/(\d{1,2})\.(\d{2})\.(\d{2})/, '$1:$2:$3');
+            return s;
+        };
+
+        return {
+            ...b,
+            carId: car ? car.id : 0, // Fallback ID
+            carModel: b.carModel, // Trust Sheet data first
+            carPlate: b.carPlate, // Trust Sheet data first
+            start: fixDate(b.start),
+            end: fixDate(b.end)
+        };
+    });
+}
+
+// Helper: Fetch in background without blocking UI
+function fetchFreshDataInBackground() {
+    setTimeout(async () => {
+        try {
+            const response = await fetch(GOOGLE_SCRIPT_URL);
+            const data = await response.json();
+
+            if (Array.isArray(data)) {
+                // Update cache silently
+                localStorage.setItem('carrent_bookings_cache', JSON.stringify(data));
+                localStorage.setItem('carrent_bookings_cache_time', Date.now().toString());
+
+                // Update data and re-render
+                bookings = processBookingsData(data);
+                renderDashboard();
+                renderBookingsTable();
+                updateStats();
+                console.log('🔄 Background sync complete');
+            }
+        } catch (error) {
+            console.log('Background fetch failed (will retry next time)');
+        }
+    }, 1000); // Wait 1 second before background fetch
 }
 
 // Overwrite saveBookings to do nothing (since we rely on Cloud)
@@ -665,6 +749,10 @@ window.updateStatus = async function (id, status) {
                 status: status
             })
         });
+
+        // Clear cache and force refresh
+        localStorage.removeItem('carrent_bookings_cache');
+        await fetchBookings(true);
     } catch (error) {
         console.error("Update status failed:", error);
         alert("อัปเดตบน Server ไม่สำเร็จ (Check Connection)");
