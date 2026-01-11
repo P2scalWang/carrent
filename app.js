@@ -1,4 +1,4 @@
-// Data Configuration
+// Data Configuration - PLEASE UPDATE THESE
 const LIFF_ID = '2008863808-e2MCAccQ';
 const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyH1oMpE1tEJaFZjf1QGAurl_EkF4Nf_MZwEcayxHpcVHKrqhe2Q6dqp7zHBMkS3YrpQg/exec';
 
@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 1. Initialize LIFF
     await initLiff();
 
-    // 2. Fetch Data
+    // 2. Fetch Data (will update UI when done)
     await fetchBookings();
 
     // 3. UI Init
@@ -228,11 +228,8 @@ function renderDashboard() {
                     barDiv.className = 'booking-bar';
                     barDiv.style.left = `${leftPos}px`;
                     barDiv.style.width = `${barWidth}px`;
-                    // Stacking: 4px padding from top, plus offset if index > 0
-                    // If multiple concurrent bookings, simplistic stacking:
-                    // In reality, robust stacking needs interval analysis. 
-                    // For now, simpler offset:
-                    barDiv.style.top = `calc(50% + ${(index * 10)}px)`; // Slight offset if multiple
+                    // Stacking: top 50% + dynamic offset
+                    barDiv.style.top = `calc(50% + ${(index * 10)}px)`;
                     if (index > 0) barDiv.style.opacity = "0.9";
 
                     barDiv.title = tooltip;
@@ -250,11 +247,92 @@ function renderDashboard() {
     }, 100); // 100ms delay to ensure layout stability
 }
 
+// ------------------------------------------
+// RENDER BOOKINGS LIST
+// ------------------------------------------
+function renderBookingsTable() {
+    const tbody = document.getElementById('bookingsTableBody');
+    if (!tbody) return;
+
+    const sorted = [...bookings].sort((a, b) => new Date(b.start) - new Date(a.start));
+
+    if (sorted.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#94a3b8;padding:2rem;">ไม่พบข้อมูลการจอง (No Bookings Found)</td></tr>';
+
+        // Also Mobile
+        const mobileContainer = document.getElementById('mobileHistoryList');
+        if (mobileContainer) mobileContainer.innerHTML = '<div style="text-align:center; color: var(--text-muted); padding: 1rem;">ไม่มีประวัติการจอง</div>';
+        return;
+    }
+
+    tbody.innerHTML = sorted.map(b => {
+        const car = CARS_DATA.find(c => c.id == b.carId);
+        const displayPlate = car ? car.plate : (b.carPlate || 'Unknown');
+        const displayModel = car ? car.model : (b.carModel || 'Unknown');
+
+        const startStr = getFormattedDate(b.start);
+        const endStr = getFormattedDate(b.end);
+
+        let statusBadge = '';
+        if (b.status === 'Approved') statusBadge = '<span style="color: #10b981; background: rgba(16, 185, 129, 0.1); padding: 4px 8px; border-radius: 4px;">Approved</span>';
+        else if (b.status === 'Rejected') statusBadge = '<span style="color: #ef4444; background: rgba(239, 68, 68, 0.1); padding: 4px 8px; border-radius: 4px;">Rejected</span>';
+        else statusBadge = '<span style="color: #f59e0b; background: rgba(245, 158, 11, 0.1); padding: 4px 8px; border-radius: 4px;">Pending</span>';
+
+        // Action Buttons (Only for Pending)
+        const actions = (b.status === 'Pending') ?
+            `<button onclick="updateStatus(${b.id}, 'Approved')" style="cursor: pointer; background: #10b981; color: white; border: none; padding: 4px 8px; border-radius: 4px; margin-right: 4px;">Approve</button>
+             <button onclick="updateStatus(${b.id}, 'Rejected')" style="cursor: pointer; background: #ef4444; color: white; border: none; padding: 4px 8px; border-radius: 4px;">Reject</button>`
+            : '-';
+
+        return `
+            <tr>
+                <td>${startStr}</td>
+                <td>${endStr}</td>
+                <td>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <div class="avatar" style="font-size: 0.7rem; width:24px; height:24px;">${b.user ? b.user.charAt(0) : '?'}</div>
+                        ${b.user}
+                    </div>
+                </td>
+                <td>${b.purpose}</td>
+                <td><span style="font-family: monospace; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">${displayPlate}</span></td>
+                <td>${displayModel}</td>
+                <td>${statusBadge}</td>
+                <td>${actions}</td>
+            </tr>
+        `;
+    }).join('');
+
+    // Update Mobile List
+    const mobileContainer = document.getElementById('mobileHistoryList');
+    if (mobileContainer) {
+        mobileContainer.innerHTML = sorted.slice(0, 5).map(b => {
+            const car = CARS_DATA.find(c => c.id == b.carId);
+            const displayModel = car ? car.model : (b.carModel || 'Unknown');
+            const startStr = getFormattedDate(b.start);
+
+            let statusColor = '#f59e0b';
+            if (b.status === 'Approved') statusColor = '#10b981';
+            if (b.status === 'Rejected') statusColor = '#ef4444';
+
+            return `
+             <div class="history-item">
+                <div>
+                    <div class="h-date"><i class="fa-solid fa-calendar"></i> ${startStr}</div>
+                    <div class="h-car" style="color:white; font-weight:500;">${displayModel}</div>
+                    <div style="font-size:0.8rem; color:var(--text-muted);">${b.purpose}</div>
+                </div>
+                <div class="h-status" style="color: ${statusColor}; background: ${statusColor}20; border: 1px solid ${statusColor}40;">
+                    ${b.status}
+                </div>
+            </div>`;
+        }).join('');
+    }
+}
+
 function initSelectOptions() {
     // Initial load
 }
-
-// ... (Other helper functions remain the same, just keeping them clean)
 
 // API & Sync
 async function fetchBookings(forceRefresh = false) {
@@ -264,7 +342,10 @@ async function fetchBookings(forceRefresh = false) {
         const data = await response.json();
         if (Array.isArray(data)) {
             bookings = processBookingsData(data);
+
+            // Render everything to be safe
             renderDashboard();
+            renderBookingsTable();
             updateStats();
         }
     } catch (e) { console.error(e); }
@@ -276,7 +357,7 @@ function processBookingsData(data) {
         const fixDate = (str) => {
             if (!str) return null;
             if (str instanceof Date) return str.toISOString();
-            return str.replace(/(\d{1,2})\.(\d{2})\.(\d{2})/, '$1:$2:$3');
+            return str.replace(/(\d{1,2})\.(\d{2})\.(\d{2})/, '$1:$2:$3'); // Standard ISO
         };
         return {
             ...b,
@@ -305,13 +386,50 @@ function getFormattedDate(isoString) {
     return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
 }
 
+window.updateStatus = async function (id, status) {
+    if (!confirm(`ต้องการเปลี่ยนสถานะเป็น ${status}?`)) return;
+    const bk = bookings.find(b => b.id == id);
+    if (bk) {
+        bk.status = status;
+        renderBookingsTable();
+        renderDashboard();
+        updateStats();
+    }
+    // API call logic would go here
+    /*
+    await fetch(GOOGLE_SCRIPT_URL, { 
+        method: 'POST', 
+        mode: 'no-cors',
+        headers: {'Content-Type': 'text/plain'},
+        body: JSON.stringify({ action: 'updateStatus', id, status })
+    }); 
+    */
+}
+
 // Modal & Utils
 window.openBookingModal = () => modal.classList.add('open');
 window.closeBookingModal = () => modal.classList.remove('open');
+
+// Navigation Logic with Auto-Render
 window.showSection = (id) => {
+    // 1. Hide all
     document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+
+    // 2. Show target
     document.getElementById(id).classList.add('active');
+
+    // 3. Update Sidebar Highlights
+    document.querySelectorAll('.sidebar nav a').forEach(link => {
+        link.classList.remove('active');
+        // Simple check: does the onclick handler contain the ID?
+        if (link.getAttribute('onclick').includes(id)) {
+            link.classList.add('active');
+        }
+    });
+
+    // 4. Trigger specific renders
     if (id === 'dashboard') renderDashboard();
+    if (id === 'bookings') renderBookingsTable();
 };
 
 async function initLiff() { /* liff init code */ }
