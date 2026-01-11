@@ -344,19 +344,30 @@
                             <div v-if="car.bookings.length === 0"
                                 class="flex items-center gap-2 text-green-500 text-xs font-bold bg-green-50 p-3 rounded-lg border border-green-100">
                                 <i class="fa-regular fa-circle-check"></i>
-                                <span>ว่างยาวตลอด 30 วันนี้</span>
+                                <span>ยังไม่มีการจอง</span>
                             </div>
                             <ul v-else class="space-y-2">
-                                <li v-for="booking in car.bookings" :key="booking.id"
-                                    class="text-xs bg-slate-50 p-2 rounded-lg border-l-4 border-red-400 flex justify-between items-start">
+                                <li v-for="booking in car.bookings" :key="booking.id" :class="['text-xs bg-slate-50 p-3 rounded-lg border-l-4 flex justify-between items-start',
+                                        booking.status === 'Approved' ? 'border-green-400' : 
+                                        booking.status === 'Rejected' ? 'border-red-400' : 
+                                        'border-yellow-400']">
                                     <div>
                                         <div class="font-bold text-slate-700">{{ formatDate(booking.start) }} - {{
                                             formatDate(booking.end) }}</div>
-                                        <div class="text-slate-500 mt-0.5"><i
-                                                class="fa-solid fa-user text-[10px] mr-1"></i>{{ booking.user }}</div>
+                                        <div class="text-slate-500 mt-1 flex items-center gap-2">
+                                            <span><i class="fa-solid fa-user text-[10px] mr-1"></i>{{ booking.user
+                                                }}</span>
+                                            <!-- Status Badge -->
+                                            <span :class="['px-1.5 py-0.5 rounded text-[10px] font-bold uppercase',
+                                                booking.status === 'Approved' ? 'bg-green-100 text-green-600' : 
+                                                booking.status === 'Rejected' ? 'bg-red-100 text-red-600' : 
+                                                'bg-yellow-100 text-yellow-600']">
+                                                {{ booking.status || 'Pending' }}
+                                            </span>
+                                        </div>
                                     </div>
                                     <span
-                                        class="text-[10px] bg-white border border-slate-200 px-1.5 py-0.5 rounded text-slate-500">{{
+                                        class="text-[10px] bg-white border border-slate-200 px-2 py-1 rounded text-slate-500 max-w-[100px] truncate">{{
                                         booking.purpose }}</span>
                                 </li>
                             </ul>
@@ -389,7 +400,7 @@
     </div>
 
     <script>
-        const API_URL = 'https://script.google.com/macros/s/AKfycbz6o4K22hLOKYf6CRdznanyi-sm6zJcuoihYG2CbXexcmFoI-uhy8DgHR2IhEdqjB9kUA/exec'; // User needs to replace this
+        const API_URL = 'https://script.google.com/macros/s/AKfycbzkGyirXGmwNVUgZjsD5QCXJEeDJ3aoe4ZSyH8Q9O0FXv_GfWecEp_-tftEmpmOgcMCEw/exec'; // User needs to replace this
 
         const { createApp, ref, computed, onMounted, reactive, watch } = Vue;
 
