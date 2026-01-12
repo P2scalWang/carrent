@@ -400,7 +400,8 @@
     </div>
 
     <script>
-        const API_URL = 'https://script.google.com/macros/s/AKfycbxnun_T4TejdIOhXZD2WiTqDghKoJ2W3joDwqZmJpPwbdUGSRxXL1U-yPIP8WUwcQsvLQ/exec'; // User needs to replace this
+        const API_URL = 'https://script.google.com/macros/s/AKfycbxnun_T4TejdIOhXZD2WiTqDghKoJ2W3joDwqZmJpPwbdUGSRxXL1U-yPIP8WUwcQsvLQ/exec';
+        const WEBHOOK_URL = ''; // ใส่ Webhook URL ของคุณที่นี่
 
         const { createApp, ref, computed, onMounted, reactive, watch } = Vue;
 
@@ -617,6 +618,50 @@
                                 body: JSON.stringify(payload)
                             });
                         }
+
+                        // Send to Webhook if URL is configured
+                        if (WEBHOOK_URL && WEBHOOK_URL.trim() !== '') {
+                            try {
+                                const webhookPayload = {
+                                    event: 'car_booking',
+                                    timestamp: new Date().toISOString(),
+                                    booking: {
+                                        userId: profile.value?.userId || 'unknown',
+                                        userName: form.username,
+                                        userPicture: profile.value?.pictureUrl || '',
+                                        car: {
+                                            id: selectedCar.id,
+                                            plate: selectedCar.plate,
+                                            model: selectedCar.model,
+                                            color: selectedCar.color,
+                                            type: selectedCar.type
+                                        },
+                                        dates: {
+                                            start: form.start,
+                                            end: form.end,
+                                            startFormatted: formatDateDisplay(form.start),
+                                            endFormatted: formatDateDisplay(form.end)
+                                        },
+                                        usage: {
+                                            type: form.usageType,
+                                            purpose: form.purpose,
+                                            combinedPurpose: combinedPurpose
+                                        }
+                                    }
+                                };
+
+                                await fetch(form.webhookUrl, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify(webhookPayload)
+                                });
+                                console.log('Webhook sent successfully:', webhookPayload);
+                            } catch (webhookError) {
+                                console.error('Webhook sending failed:', webhookError);
+                                // Continue even if webhook fails - don't block the booking
+                            }
+                        }
+
                         showSuccess.value = true;
                     } catch (e) {
                         alert('Submission failed');
