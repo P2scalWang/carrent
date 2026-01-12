@@ -400,7 +400,7 @@
     </div>
 
     <script>
-        const API_URL = 'https://script.google.com/macros/s/AKfycbxnun_T4TejdIOhXZD2WiTqDghKoJ2W3joDwqZmJpPwbdUGSRxXL1U-yPIP8WUwcQsvLQ/exec';
+        const API_URL = 'https://script.google.com/macros/s/AKfycbw47FbT5A8HdLHw3D0qM5ZpaNBdpy6sAaIdQJbKYopUoB3_e_9ZJaxgeb_M7DtkreaBtQ/exec';
         const WEBHOOK_URL = 'https://n8n-p2sw2ng.p2scalw2ng.xyz/webhook-test/1186661e-ed3f-4028-8bd7-c33eb6bae499'; // ใส่ Webhook URL ของคุณที่นี่
 
         const { createApp, ref, computed, onMounted, reactive, watch } = Vue;
@@ -591,10 +591,14 @@
 
                     const selectedCar = cars.find(c => c.id === form.carId);
 
+                    // Generate unique booking ID
+                    const bookingId = `BK${Date.now()}-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
+
                     // Combine Type and Details for Backend
                     const combinedPurpose = `[${form.usageType === 'Work' ? 'งาน' : 'ส่วนตัว'}] ${form.purpose}`;
 
                     const payload = {
+                        bookingId: bookingId,
                         userId: profile.value?.userId || 'unknown',
                         user: form.username,
                         carPlate: selectedCar.plate,
@@ -624,6 +628,7 @@
                             try {
                                 const webhookPayload = {
                                     event: 'car_booking',
+                                    bookingId: bookingId,
                                     timestamp: new Date().toISOString(),
                                     booking: {
                                         userId: profile.value?.userId || 'unknown',
