@@ -40,8 +40,8 @@
         };
 
         // Initialize Firebase
-        const firebaseApp = firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+         firebaseApp = firebase.initializeApp(firebaseConfig);
+         database = firebase.database();
 
         // Expose to global scope for Vue.js usage
         window.firebaseDB = database;
@@ -429,7 +429,7 @@
     </div>
 
     <script>
-        const API_URL = 'https://script.google.com/macros/s/AKfycbzfb8wQLIqqOUxgrrYFDtj8RZZNFAJVZ05XnCNHZ6BJ9KVQZuuARLZxyma-y6tlR9388g/exec';
+        const API_URL = 'https://script.google.com/macros/s/AKfycbxH-J53_HGYoJ9qbdRXYb44BW_1m_kBIwb69lDCEkyVhu3kAK3oUU7KFWIuuFXFq5IMQg/exec';
         const WEBHOOK_URL = 'https://n8n-p2sw2ng.p2scalw2ng.xyz/webhook-test/1186661e-ed3f-4028-8bd7-c33eb6bae499'; // ใส่ Webhook URL ของคุณที่นี่
 
         const { createApp, ref, computed, onMounted, reactive, watch } = Vue;
