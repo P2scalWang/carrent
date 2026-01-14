@@ -23,11 +23,11 @@
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- Firebase SDK -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-        import { getDatabase, ref, push, set } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
-
+    <!-- Firebase SDK (Compat version for global access) -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
+    <script>
+        // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyD-TuQPqyEsZClt6wnWcUlC17CdCs0_nhY",
             authDomain: "carrentproject-4577f.firebaseapp.com",
@@ -39,14 +39,17 @@
             measurementId: "G-D74CK04G3Y"
         };
 
-         firebaseApp = initializeApp(firebaseConfig);
-         database = getDatabase(firebaseApp);
+        // Initialize Firebase
+        const firebaseApp = firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
 
         // Expose to global scope for Vue.js usage
         window.firebaseDB = database;
-        window.firebaseRef = ref;
-        window.firebasePush = push;
-        window.firebaseSet = set;
+        window.firebaseRef = (db, path) => db.ref(path);
+        window.firebasePush = (ref, data) => ref.push(data);
+        window.firebaseSet = (ref, data) => ref.set(data);
+
+        console.log('✅ Firebase initialized successfully');
     </script>
 
     <script>
@@ -426,7 +429,7 @@
     </div>
 
     <script>
-        const API_URL = 'https://script.google.com/macros/s/AKfycbyMRfxEFOeymmV2tyHCQxnmtUy3bDLrC0hdrqv5ZGFDW7ROpI5XGa7C3KI5-IVUFS7EQw/exec';
+        const API_URL = 'https://script.google.com/macros/s/AKfycbzfb8wQLIqqOUxgrrYFDtj8RZZNFAJVZ05XnCNHZ6BJ9KVQZuuARLZxyma-y6tlR9388g/exec';
         const WEBHOOK_URL = 'https://n8n-p2sw2ng.p2scalw2ng.xyz/webhook-test/1186661e-ed3f-4028-8bd7-c33eb6bae499'; // ใส่ Webhook URL ของคุณที่นี่
 
         const { createApp, ref, computed, onMounted, reactive, watch } = Vue;
