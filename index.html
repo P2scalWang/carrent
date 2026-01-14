@@ -39,7 +39,7 @@
             measurementId: "G-D74CK04G3Y"
         };
 
-        st firebaseApp = initializeApp(firebaseConfig);
+        const firebaseApp = initializeApp(firebaseConfig);
         const database = getDatabase(firebaseApp);
 
         // Expose to global scope for Vue.js usage
@@ -697,10 +697,14 @@
                         // ============================================
                         // PUSH TO FIREBASE REALTIME DATABASE
                         // ============================================
+                        console.log('🔥 Checking Firebase availability...');
+                        console.log('firebaseDB:', !!window.firebaseDB);
+                        console.log('firebasePush:', !!window.firebasePush);
+                        console.log('firebaseRef:', !!window.firebaseRef);
+
                         if (window.firebaseDB && window.firebasePush && window.firebaseRef) {
                             try {
-                                const bookingsRef = window.firebaseRef(window.firebaseDB, 'bookings');
-                                await window.firebasePush(bookingsRef, {
+                                const firebaseData = {
                                     bookingId: bookingId,
                                     userId: profile.value?.userId || 'unknown',
                                     userName: form.username,
@@ -717,17 +721,27 @@
                                     combinedPurpose: combinedPurpose,
                                     status: form.usageType === 'Work' ? 'Approved' : 'Pending',
                                     createdAt: new Date().toISOString()
-                                });
+                                };
+                                console.log('📤 Sending to Firebase:', firebaseData);
+
+                                const bookingsRef = window.firebaseRef(window.firebaseDB, 'bookings');
+                                await window.firebasePush(bookingsRef, firebaseData);
                                 console.log('✅ Firebase: Booking saved successfully');
+                                alert('✅ จองสำเร็จ! ข้อมูลถูกบันทึกแล้ว');
                             } catch (firebaseError) {
                                 console.error('❌ Firebase error:', firebaseError);
+                                alert('❌ Firebase Error: ' + firebaseError.message);
                                 // Continue even if Firebase fails
                             }
+                        } else {
+                            console.warn('⚠️ Firebase not available - data not saved to Firebase');
+                            alert('⚠️ Firebase ยังไม่พร้อม ข้อมูลอาจไม่ถูกบันทึก');
                         }
 
                         showSuccess.value = true;
                     } catch (e) {
-                        alert('Submission failed');
+                        console.error('Submit error:', e);
+                        alert('Submission failed: ' + e.message);
                     } finally {
                         submitting.value = false;
                     }
