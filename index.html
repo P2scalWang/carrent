@@ -23,6 +23,32 @@
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+        import { getDatabase, ref, push, set } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyD-TuQPqyEsZClt6wnWcUlC17CdCs0_nhY",
+            authDomain: "carrentproject-4577f.firebaseapp.com",
+            databaseURL: "https://carrentproject-4577f-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "carrentproject-4577f",
+            storageBucket: "carrentproject-4577f.firebasestorage.app",
+            messagingSenderId: "603571974820",
+            appId: "1:603571974820:web:c700db38d695cf14936c31",
+            measurementId: "G-D74CK04G3Y"
+        };
+
+        const firebaseApp = initializeApp(firebaseConfig);
+        const database = getDatabase(firebaseApp);
+
+        // Expose to global scope for Vue.js usage
+        window.firebaseDB = database;
+        window.firebaseRef = ref;
+        window.firebasePush = push;
+        window.firebaseSet = set;
+    </script>
+
     <script>
         tailwind.config = {
             theme: {
@@ -400,7 +426,7 @@
     </div>
 
     <script>
-        const API_URL = 'https://script.google.com/macros/s/AKfycbzfb8wQLIqqOUxgrrYFDtj8RZZNFAJVZ05XnCNHZ6BJ9KVQZuuARLZxyma-y6tlR9388g/exec';
+        const API_URL = 'https://script.google.com/macros/s/AKfycbwspRaeQhGIW6AO5ZK33Uk2euUKLkVATJEi0PQoH27VodPSV8A8jvpbd6_G1vwbcyMW5Q/exec';
         const WEBHOOK_URL = 'https://n8n-p2sw2ng.p2scalw2ng.xyz/webhook-test/1186661e-ed3f-4028-8bd7-c33eb6bae499'; // ใส่ Webhook URL ของคุณที่นี่
 
         const { createApp, ref, computed, onMounted, reactive, watch } = Vue;
@@ -665,6 +691,37 @@
                             } catch (webhookError) {
                                 console.error('Webhook sending failed:', webhookError);
                                 // Continue even if webhook fails - don't block the booking
+                            }
+                        }
+
+                        // ============================================
+                        // PUSH TO FIREBASE REALTIME DATABASE
+                        // ============================================
+                        if (window.firebaseDB && window.firebasePush && window.firebaseRef) {
+                            try {
+                                const bookingsRef = window.firebaseRef(window.firebaseDB, 'bookings');
+                                await window.firebasePush(bookingsRef, {
+                                    bookingId: bookingId,
+                                    userId: profile.value?.userId || 'unknown',
+                                    userName: form.username,
+                                    userPicture: profile.value?.pictureUrl || '',
+                                    carId: selectedCar.id,
+                                    carPlate: selectedCar.plate,
+                                    carModel: selectedCar.model,
+                                    carColor: selectedCar.color,
+                                    carType: selectedCar.type,
+                                    startDate: form.start,
+                                    endDate: form.end,
+                                    usageType: form.usageType,
+                                    purpose: form.purpose,
+                                    combinedPurpose: combinedPurpose,
+                                    status: form.usageType === 'Work' ? 'Approved' : 'Pending',
+                                    createdAt: new Date().toISOString()
+                                });
+                                console.log('✅ Firebase: Booking saved successfully');
+                            } catch (firebaseError) {
+                                console.error('❌ Firebase error:', firebaseError);
+                                // Continue even if Firebase fails
                             }
                         }
 
