@@ -40,7 +40,7 @@
         };
 
         // Initialize Firebase
-         firebaseApp = firebase.initializeApp(firebaseConfig);
+        const firebaseApp = firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
         // Expose to global scope for Vue.js usage
@@ -429,7 +429,7 @@
     </div>
 
     <script>
-        const API_URL = 'https://script.google.com/macros/s/AKfycbyGGT5cjy3UGjtpBOI3f0FzB5MAT-0RVdvsdxIH8hICX4KxoDu3yvnKK0eVff6JbBXwjw/exec';
+        const API_URL = 'https://script.google.com/macros/s/AKfycbzqe0f4Aoh-4quFWx7ZIbQZR3m1bwygCO6yhcblSH2_RiRu7hEcT8bKfbeHauZPh5te/exec';
         const WEBHOOK_URL = ''; // ปิด webhook ถ้าไม่ได้ใช้ n8n อีกต่อไป
 
         const { createApp, ref, computed, onMounted, reactive, watch } = Vue;
@@ -632,6 +632,7 @@
                         user: form.username,
                         carPlate: selectedCar.plate,
                         carModel: selectedCar.model,
+                        carColor: selectedCar.color, // เพิ่มสีรถ
                         carId: selectedCar.id,
                         start: form.start, // YYYY-MM-DD
                         end: form.end,     // YYYY-MM-DD
