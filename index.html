@@ -39,8 +39,8 @@
             measurementId: "G-D74CK04G3Y"
         };
 
-        const firebaseApp = initializeApp(firebaseConfig);
-        const database = getDatabase(firebaseApp);
+         firebaseApp = initializeApp(firebaseConfig);
+         database = getDatabase(firebaseApp);
 
         // Expose to global scope for Vue.js usage
         window.firebaseDB = database;
@@ -426,7 +426,7 @@
     </div>
 
     <script>
-        const API_URL = 'https://script.google.com/macros/s/AKfycbwJ7TP5Ro66LdLmd85ZIiD8-tTIRVK_CcqSKI7OJKW9-fFpqgPGMNznmShFwoVEsyBI-Q/exec';
+        const API_URL = 'https://script.google.com/macros/s/AKfycbyMRfxEFOeymmV2tyHCQxnmtUy3bDLrC0hdrqv5ZGFDW7ROpI5XGa7C3KI5-IVUFS7EQw/exec';
         const WEBHOOK_URL = 'https://n8n-p2sw2ng.p2scalw2ng.xyz/webhook-test/1186661e-ed3f-4028-8bd7-c33eb6bae499'; // ใส่ Webhook URL ของคุณที่นี่
 
         const { createApp, ref, computed, onMounted, reactive, watch } = Vue;
