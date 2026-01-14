@@ -40,7 +40,7 @@
         };
 
         // Initialize Firebase
-        const firebaseApp = firebase.initializeApp(firebaseConfig);
+         firebaseApp = firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
         // Expose to global scope for Vue.js usage
@@ -429,7 +429,7 @@
     </div>
 
     <script>
-        const API_URL = 'https://script.google.com/macros/s/AKfycbxH-J53_HGYoJ9qbdRXYb44BW_1m_kBIwb69lDCEkyVhu3kAK3oUU7KFWIuuFXFq5IMQg/exec';
+        const API_URL = 'https://script.google.com/macros/s/AKfycbwk3qmXlcqK0QpC143Pl2EsIjA7DQc1Wy-hRqlKUq0WABFqf8TkPyImD5-Q-KUew4XKaA/exec';
         const WEBHOOK_URL = ''; // ปิด webhook ถ้าไม่ได้ใช้ n8n อีกต่อไป
 
         const { createApp, ref, computed, onMounted, reactive, watch } = Vue;
